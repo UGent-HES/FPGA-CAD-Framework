@@ -38,7 +38,7 @@ Routing:
 Usage
 ---------------
 
-Some parts of this toolflow require external packages, you can contact us if you want more information. 
+Some parts of this toolflow require external packages. Please contact us if you want more information.
 
 To calculate point to point delays, vpr is used (see option --vpr_command). When compiling vpr, the macro PRINT_ARRAYS has to be defined in "place/timing_place_lookup.c".
 
