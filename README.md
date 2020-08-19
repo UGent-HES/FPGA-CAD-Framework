@@ -13,7 +13,7 @@ What can I do with this tool flow?
 <li>
 Packing:
 <ul>
-  <li>Partitioning based packing: A multi-threaded implementation of a packer. Packing happens in two phases. Firstly the partitioningsbased packing and secondly the seed-based packing phase. A second phase is necessary to allow the packer to check architectural constraints. </li>
+  <li>Partitioning based packing: a multi-threaded implementation of a packer. Packing happens in two phases. Firstly the partitioningsbased packing and secondly the seed-based packing phase. A second phase is necessary to allow the packer to check architectural constraints. </li>
 </ul>
 </li>
 
