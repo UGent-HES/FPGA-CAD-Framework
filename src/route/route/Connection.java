@@ -22,6 +22,7 @@ public class Connection implements Comparable<Connection>  {
 	private float criticality;
 
     public Net net;
+    //boundingBox is used for sorting Connections, not for routing
     public final int boundingBox;
 	
 	public final String netName;
@@ -168,6 +169,7 @@ public class Connection implements Comparable<Connection>  {
 	}
 	
 	public boolean congested() {
+		//Connection is congested when at least 1 RouteNode is overused
 		for(RouteNode rn : this.routeNodes){
 			if(rn.overUsed()) {
 				return true;

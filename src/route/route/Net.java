@@ -18,7 +18,7 @@ public class Net {
 	private final List<Connection> connections;
 	public final int fanout;
 	
-	private final short boundingBoxRange;
+	private short boundingBoxRange;
 	public final short x_min_b;
 	public final short x_max_b;
 	public final short y_min_b;
@@ -34,8 +34,10 @@ public class Net {
 	public Net(List<Connection> net, short boundingBoxRange) {
 		this.id = net.get(0).id;
 		this.connections = net;
+		//fanout = nr of connection in net
 		this.fanout = net.size();
 		
+		//boundingBoxRange is used for routing all connections in net
 		this.boundingBoxRange = boundingBoxRange;
 		
 		List<Short> xCoordinatesBB = new ArrayList<>();
