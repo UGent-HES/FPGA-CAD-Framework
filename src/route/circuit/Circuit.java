@@ -221,6 +221,9 @@ public class Circuit {
     	        			
     	        			id++;
     	        		}
+    	        		//net has all connections
+    	        		//collision detection function
+    	        		//change bbrange depending on collision
     	        		
     	        		this.nets.add(new Net(net, boundingBoxRange));
         			}
