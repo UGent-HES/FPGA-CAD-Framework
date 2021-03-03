@@ -27,7 +27,7 @@ public class Net {
 	public final float x_geo;
 	public final float y_geo;
 	
-	public final int hpwl;
+	public final int hpwl; // HPWL: Half perimeter wire-length - normalization factor for the bias cost
 	
 	private Opin fixedOpin;
 	

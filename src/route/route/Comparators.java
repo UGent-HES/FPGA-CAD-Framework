@@ -2,6 +2,13 @@ package route.route;
 
 import java.util.Comparator;
 
+/*
+ * obj1 and obj2 are the objects to be compared.
+ * This method returns zero if the objects are equal.
+ * It returns a positive value if obj1 is greater than obj2.
+ * Otherwise, a negative value is returned.
+ */
+
 public class Comparators {
     public static Comparator<QueueElement> PRIORITY_COMPARATOR = new Comparator<QueueElement>() {
         @Override
@@ -28,6 +35,7 @@ public class Comparators {
     				}else if(a.hashCode() < b.hashCode()){
     					return -1;
     				}else{
+					// if elements differ, but hashes are equal: Error
     					if(a != b) System.err.println("Failure: Error while comparing 2 connections. HashCode of Two Connections was identical");
     					return 0;
     				}

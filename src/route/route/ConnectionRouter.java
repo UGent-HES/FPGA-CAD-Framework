@@ -40,7 +40,7 @@ public class ConnectionRouter {
 	private int connectionsRouted, nodesExpanded;
 	private int connectionsRoutedIteration;
 	
-	private int itry;
+	private int itry; // Current iteration of global routing
 	
 	private RouteTimers routeTimers;
 	
@@ -210,10 +210,12 @@ public class ConnectionRouter {
 		this.itry = 1;
 		
 		List<Connection> sortedListOfConnections = new ArrayList<>();
+		// from large to small fanout, then small to large bounding box
 		sortedListOfConnections.addAll(this.circuit.getConnections());
 		Collections.sort(sortedListOfConnections, Comparators.FanoutConnection);
 		
         List<Net> sortedListOfNets = new ArrayList<>();
+        // from large to small fanout, then small to large perimeter (aka net bounding box)
         sortedListOfNets.addAll(this.circuit.getNets());
         Collections.sort(sortedListOfNets, Comparators.FanoutNet);
         
