@@ -198,6 +198,7 @@ public class ConnectionRouter {
     	return timeMilliseconds;
     }
     private void doRouting(int nrOfTrials, int fixOpins) {
+    	// fixOpins: number of iterations - 1 while the Opins are fixed
     	
     	this.nodesTouched.clear();
     	this.queue.clear();
@@ -247,7 +248,7 @@ public class ConnectionRouter {
         	this.connectionsRoutedIteration = 0;
         	validRouting = true;
         	
-        	//Fix opins in order of high fanout nets
+        	// Fix opins in order of high fanout nets
         	this.routeTimers.fixOpin.start();
         	if(this.itry >= fixOpins) {
             	for(Net net : sortedListOfNets) {
@@ -255,7 +256,6 @@ public class ConnectionRouter {
                 		Opin opin = net.getMostUsedOpin();
             			if(!opin.isOpin) {
                 			net.setOpin(opin);
-                			opin.isOpin = true;
                 		}
             		}
             	}
@@ -266,7 +266,7 @@ public class ConnectionRouter {
         	this.setRerouteCriticality(sortedListOfConnections);
         	this.routeTimers.setRerouteCriticality.finish();
     		
-        	//Route Connections
+        	// Route Connections
         	for(Connection con : sortedListOfConnections) {
 				if (this.itry == 1) {
 					this.routeTimers.firstIteration.start();
@@ -293,10 +293,10 @@ public class ConnectionRouter {
 				if(!con.net.hasOpin()) validRouting = false;
 			}
 			
-        	//Check if illegal routing trees exist if all congestion is resolved
+        	// Check if illegal routing trees exist if all congestion is resolved
         	if(validRouting) this.fixIllegalTrees(sortedListOfConnections);
 			
-			//Update timing and criticality
+			// Update timing and criticality
 			String maxDelayString = String.format("%9s", "---");
 			this.routeTimers.updateTiming.start();
 
@@ -309,29 +309,29 @@ public class ConnectionRouter {
 
 			this.routeTimers.updateTiming.finish();
 			
-			//Calculate statistics
+			// Calculate statistics
 			this.routeTimers.calculateStatistics.start();
 			
 			int numRouteNodes = this.rrg.getRouteNodes().size();
 			int overUsed = this.getNumOverusedAndIllegalNodes(sortedListOfConnections);
 			double overUsePercentage = 100.0 * (double)overUsed / numRouteNodes;
 			
-			int wireLength = this.rrg.congestedTotalWireLengt();
+			int wireLength = this.rrg.congestedTotalWireLength();
 			
 			this.routeTimers.calculateStatistics.finish();
 			
-			//Runtime
+			// Runtime
 			long iterationEnd = System.nanoTime();
 			int rt = (int) Math.round((iterationEnd-iterationStart) * Math.pow(10, -6));
 			
 			System.out.printf("%9d  %8.2f  %8.2f  %12.3f  %9d  %11d  %8d  %6.2f%%  %11d  %s\n", this.itry, this.alphaWLD, this.alphaTD, REROUTE_CRITICALITY, rt, this.connectionsRoutedIteration, overUsed, overUsePercentage, wireLength, maxDelayString);
 
-			//Check if the routing is valid, if realizable return, the routing succeeded
+			// Check if the routing is valid, if realizable return, the routing succeeded
 			if (validRouting) {
 				return;
 			}
 			
-			//Updating the cost factors
+			// Updating the cost factors
 			this.routeTimers.updateCost.start();
 			if (this.itry == 1) {
 				this.pres_fac = initial_pres_fac;

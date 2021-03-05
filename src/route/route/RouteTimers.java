@@ -13,16 +13,16 @@ public class RouteTimers {
 	public Timer updateCost;
 	
 	public RouteTimers() {
-		this.firstIteration = new Timer("first iteration");
-		this.updateTiming = new Timer("update timing");
-		this.rerouteCritical = new Timer("reroute critical");
-		this.rerouteCongestion = new Timer("reroute congestion");
-		this.rerouteIllegal = new Timer("reroute illegal");
-		this.rerouteOpin = new Timer("reroute opin");
-		this.fixOpin = new Timer("fix opin");
+		this.firstIteration        = new Timer("first iteration");
+		this.updateTiming          = new Timer("update timing");
+		this.rerouteCritical       = new Timer("reroute critical");
+		this.rerouteCongestion     = new Timer("reroute congestion");
+		this.rerouteIllegal        = new Timer("reroute illegal");
+		this.rerouteOpin           = new Timer("reroute opin");
+		this.fixOpin               = new Timer("fix opin");
 		this.setRerouteCriticality = new Timer("set reroute crit");
-		this.calculateStatistics = new Timer("calc stat");
-		this.updateCost = new Timer("update cost");
+		this.calculateStatistics   = new Timer("calc stat");
+		this.updateCost            = new Timer("update cost");
 	}
 	
 	@Override

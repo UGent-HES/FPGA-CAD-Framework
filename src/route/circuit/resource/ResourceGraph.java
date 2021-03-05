@@ -14,6 +14,9 @@ import route.circuit.architecture.BlockCategory;
 import route.circuit.architecture.BlockType;
 import route.circuit.resource.Site;
 import route.circuit.resource.RouteNode;
+import route.main.Logger;
+import route.main.Logger.Location;
+import route.main.Logger.Stream;
 
 public class ResourceGraph {
 	private final Circuit circuit;
@@ -34,6 +37,13 @@ public class ResourceGraph {
 	private static int SINK_COST_INDEX = 1;
 	private static int OPIN_COST_INDEX = 2;
 	private static int IPIN_COST_INDEX = 3;
+	
+	private static Logger statisticsLogger = new Logger();
+	
+	static { // initialize logger only once
+		statisticsLogger.setLocation(Stream.OUT, Location.FILE);
+		statisticsLogger.setLocation(Stream.ERR, Location.FILE);
+	}
 	
     public ResourceGraph(Circuit circuit) {
     	this.circuit = circuit;
@@ -507,13 +517,14 @@ public class ResourceGraph {
 			}
 		}
 		return totalWireLength;
-	}
-	public int congestedTotalWireLengt() {
+	} // length
+	public int congestedTotalWireLength() {
 		int totalWireLength = 0;
 		for(RouteNode routeNode : this.routeNodes) {
 			if(routeNode.isWire) {
 				if(routeNode.used()) {
 					totalWireLength += routeNode.wireLength() * routeNode.routeNodeData.occupation;
+					
 				}
 			}
 		}
@@ -550,7 +561,7 @@ public class ResourceGraph {
 		System.out.println("|                              WIRELENGTH STATS                               |");
 		System.out.println("-------------------------------------------------------------------------------");
 		System.out.println("Total wirelength: " + this.circuit.getResourceGraph().totalWireLength());
-		System.out.println("Total congested wirelength: " + this.circuit.getResourceGraph().congestedTotalWireLengt());
+		System.out.println("Total congested wirelength: " + this.circuit.getResourceGraph().congestedTotalWireLength());
 		System.out.println("Wire segments: " + this.circuit.getResourceGraph().wireSegmentsUsed());
 		System.out.println("Maximum net length: " + this.circuit.maximumNetLength());
 		System.out.println();

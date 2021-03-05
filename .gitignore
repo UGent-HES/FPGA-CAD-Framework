@@ -35,6 +35,8 @@ build.xml
 
 vpr
 
+out.log
+out.err
 
 *.csv
 *.ods

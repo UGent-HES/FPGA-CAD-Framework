@@ -171,6 +171,7 @@ public class Net {
 	public void setOpin(Opin opin) {
 		this.fixedOpin = opin;
 		this.fixedOpin.use();
+		opin.isOpin = true;
 	}
 	
 	public Opin getMostUsedOpin() {
