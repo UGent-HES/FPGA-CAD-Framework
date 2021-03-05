@@ -316,7 +316,9 @@ public class ConnectionRouter {
 			int overUsed = this.getNumOverusedAndIllegalNodes(sortedListOfConnections);
 			double overUsePercentage = 100.0 * (double)overUsed / numRouteNodes;
 			
-			int wireLength = this.rrg.congestedTotalWireLength();
+			int wireLength = this.rrg.occupiedTotalWireLength();
+			
+			this.rrg.logCongestionHeatMap();
 			
 			this.routeTimers.calculateStatistics.finish();
 			
