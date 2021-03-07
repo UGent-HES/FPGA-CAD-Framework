@@ -14,7 +14,7 @@ public class Logger {
     private PrintWriter[] writers = new PrintWriter[Stream.values().length];
 
 
-    Logger() {
+    public Logger() {
 
         // I only want dots as decimal separators
         Locale.setDefault(new Locale("en", "US"));

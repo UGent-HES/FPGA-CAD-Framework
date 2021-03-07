@@ -3,6 +3,7 @@ dist/
 data/
 lib/
 build/
+*.class
 
 benchmarks/*
 benchmarks_titan
@@ -30,8 +31,12 @@ nbproject
 .idea
 manifest.mf
 build.xml
+.env
 
 vpr
+
+out.log
+out.err
 
 *.csv
 *.ods

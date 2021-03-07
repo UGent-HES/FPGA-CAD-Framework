@@ -49,7 +49,7 @@ public class Util {
 			case 18:	return "																		";
 			case 19:	return "																			";
 			case 20:	return "																				";
-			default: 	ErrorLog.print("To many tabs: " + tabs);
+			default: 	ErrorLog.print("Too many tabs: " + tabs);
 						return "";
 		}
 	}

@@ -14,6 +14,10 @@ import route.circuit.architecture.BlockCategory;
 import route.circuit.architecture.BlockType;
 import route.circuit.resource.Site;
 import route.circuit.resource.RouteNode;
+import route.main.Logger;
+import route.main.Logger.Location;
+import route.main.Logger.Stream;
+import route.route.RouteNodeData;
 
 public class ResourceGraph {
 	private final Circuit circuit;
@@ -34,6 +38,13 @@ public class ResourceGraph {
 	private static int SINK_COST_INDEX = 1;
 	private static int OPIN_COST_INDEX = 2;
 	private static int IPIN_COST_INDEX = 3;
+	
+	private static Logger statisticsLogger = new Logger();
+	
+	static { // initialize logger only once
+		statisticsLogger.setLocation(Stream.OUT, Location.FILE);
+		statisticsLogger.setLocation(Stream.ERR, Location.FILE);
+	}
 	
     public ResourceGraph(Circuit circuit) {
     	this.circuit = circuit;
@@ -497,7 +508,7 @@ public class ResourceGraph {
 	/********************
 	 * Routing statistics
 	 ********************/
-	public int totalWireLength() {
+	public int totalWireLength() { // total length inside FPGA, each routeNode only counted onces
 		int totalWireLength = 0;
 		for(RouteNode routeNode : this.routeNodes) {
 			if(routeNode.isWire) {
@@ -508,7 +519,7 @@ public class ResourceGraph {
 		}
 		return totalWireLength;
 	}
-	public int congestedTotalWireLengt() {
+	public int occupiedTotalWireLength() { // 
 		int totalWireLength = 0;
 		for(RouteNode routeNode : this.routeNodes) {
 			if(routeNode.isWire) {
@@ -518,6 +529,17 @@ public class ResourceGraph {
 			}
 		}
 		return totalWireLength;
+	}
+	public void logCongestionHeatMap() {
+		statisticsLogger.println("Heatmap of wires");
+		statisticsLogger.println("centerx | centery | usage");
+		statisticsLogger.println("-------------------------");
+		for(RouteNode routeNode : this.routeNodes) {
+			if(routeNode.isWire) {
+				RouteNodeData data = routeNode.routeNodeData;
+				statisticsLogger.println(routeNode.centerx + "," + routeNode.centery + "," + data.occupation*1.0/routeNode.capacity);
+			}
+		}
 	}
 	public int wireSegmentsUsed() {
 		int wireSegmentsUsed = 0;
@@ -550,7 +572,7 @@ public class ResourceGraph {
 		System.out.println("|                              WIRELENGTH STATS                               |");
 		System.out.println("-------------------------------------------------------------------------------");
 		System.out.println("Total wirelength: " + this.circuit.getResourceGraph().totalWireLength());
-		System.out.println("Total congested wirelength: " + this.circuit.getResourceGraph().congestedTotalWireLengt());
+		System.out.println("Total occupied wirelength: " + this.circuit.getResourceGraph().occupiedTotalWireLength());
 		System.out.println("Wire segments: " + this.circuit.getResourceGraph().wireSegmentsUsed());
 		System.out.println("Maximum net length: " + this.circuit.maximumNetLength());
 		System.out.println();

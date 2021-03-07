@@ -28,7 +28,7 @@ public class Net {
 	public final float y_geo;
 	
 	public final int hpwl;
-	
+
 	private Opin fixedOpin;
 	
 	public Net(List<Connection> net, short boundingBoxRange) {
@@ -172,6 +172,7 @@ public class Net {
 	public void setOpin(Opin opin) {
 		this.fixedOpin = opin;
 		this.fixedOpin.use();
+		opin.isOpin = true;
 	}
 	
 	public Opin getMostUsedOpin() {

@@ -18,7 +18,7 @@ public class RouteNodeData {
 	
 	public RouteNode prev;
 	
-	public int occupation;
+	public int occupation; // The number of connections using this node at this moment - in the end: occupation <= RouteNode.capacity
 	
 	private CountingSet<GlobalPin> sourcesSet;
 	private CountingSet<RouteNode> parentsSet;

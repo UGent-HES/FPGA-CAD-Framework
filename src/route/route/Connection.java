@@ -76,7 +76,7 @@ public class Connection implements Comparable<Connection>  {
 		this.timingEdge = this.sinkTimingNode.getSourceEdge(0);
 		
 		//Bounding box		
-		this.boundingBox = calculateBoundingBox(0);
+		this.boundingBox = this.calculateBoundingBox(0);
 		
 		//Route nodes
 		this.routeNodes = new ArrayList<>();
@@ -118,8 +118,6 @@ public class Connection implements Comparable<Connection>  {
 
 		return (max_x - min_x + 1) + (max_y - min_y + 1);
 	}
-		
-		
 	
 	public void setNet(Net net) {
 		this.net = net;
@@ -135,6 +133,7 @@ public class Connection implements Comparable<Connection>  {
 	
 	public boolean isInConBoundingBoxLimit(RouteNode node) {
 		return node.xlow < this.x_max_b && node.xhigh > this.x_min_b && node.ylow < this.y_max_b && node.yhigh > this.y_min_b;
+
 	}
 	
 	public void addRouteNode(RouteNode routeNode) {
