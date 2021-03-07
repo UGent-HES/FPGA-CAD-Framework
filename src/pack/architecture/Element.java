@@ -681,7 +681,7 @@ public class Element {
 	}
 	public static String pack_pattern_to_string(String[] packPattern){
 		if(packPattern.length != 5){
-			ErrorLog.print("The lenght of the pack pattern should be 5 instead of " + packPattern.length);
+			ErrorLog.print("The length of the pack pattern should be 5 instead of " + packPattern.length);
 		}
 		return "mac_mult_" + packPattern[0] + "_to_mac_out_" + packPattern[1] + "_" + packPattern[2] + "_" + packPattern[3];
 	}
