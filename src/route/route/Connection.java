@@ -22,7 +22,15 @@ public class Connection implements Comparable<Connection>  {
 	private float criticality;
 
     public Net net;
-    public final int boundingBox;
+    
+    // boundingBoxRange is used f
+    public int boundingBoxRange;
+    //boundingBox is used for sorting Connections
+    public int boundingBox;
+    public short x_min_b;
+	public short x_max_b;
+	public short y_min_b;
+	public short y_max_b;
 	
 	public final String netName;
 	
@@ -67,8 +75,8 @@ public class Connection implements Comparable<Connection>  {
 		}
 		this.timingEdge = this.sinkTimingNode.getSourceEdge(0);
 		
-		//Bounding box
-		this.boundingBox = this.calculateBoundingBox();
+		//Bounding box		
+		this.boundingBox = calculateBoundingBox(0);
 		
 		//Route nodes
 		this.routeNodes = new ArrayList<>();
@@ -78,7 +86,8 @@ public class Connection implements Comparable<Connection>  {
 		
 		this.net = null;
 	}
-	private int calculateBoundingBox() {
+	
+	private int calculateBoundingBox(int range) {
 		int min_x, max_x, min_y, max_y;
 		
 		int sourceX = this.source.getOwner().getColumn();
@@ -101,15 +110,31 @@ public class Connection implements Comparable<Connection>  {
 			max_y = sourceY;
 		}
 		
+		this.boundingBoxRange = range;
+		this.x_max_b = (short) (max_x + this.boundingBoxRange);
+		this.x_min_b = (short) (min_x - this.boundingBoxRange);
+		this.y_max_b = (short) (max_y + this.boundingBoxRange);
+		this.y_min_b = (short) (min_y - this.boundingBoxRange);
+
 		return (max_x - min_x + 1) + (max_y - min_y + 1);
 	}
+		
+		
 	
 	public void setNet(Net net) {
 		this.net = net;
 	}
+		
+	public void SetBoundingBoxRange(int range) {
+		calculateBoundingBox(range);
+	}
 
-	public boolean isInBoundingBoxLimit(RouteNode node) {
-		return node.xlow < this.net.x_max_b && node.xhigh > this.net.x_min_b && node.ylow < this.net.y_max_b && node.yhigh > this.net.y_min_b;
+	public boolean isInNetBoundingBoxLimit(RouteNode node) {
+		return this.net.isInBoundingBoxLimit(node);
+	}
+	
+	public boolean isInConBoundingBoxLimit(RouteNode node) {
+		return node.xlow < this.x_max_b && node.xhigh > this.x_min_b && node.ylow < this.y_max_b && node.yhigh > this.y_min_b;
 	}
 	
 	public void addRouteNode(RouteNode routeNode) {
@@ -168,6 +193,7 @@ public class Connection implements Comparable<Connection>  {
 	}
 	
 	public boolean congested() {
+		//Connection is congested when at least 1 RouteNode is overused
 		for(RouteNode rn : this.routeNodes){
 			if(rn.overUsed()) {
 				return true;

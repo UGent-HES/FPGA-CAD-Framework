@@ -619,7 +619,7 @@ public class ConnectionRouter {
 			
 			//CHANX OR CHANY
 			if (child.isWire) {
-				if (con.isInBoundingBoxLimit(child)) {
+				if (con.isInNetBoundingBoxLimit(child)) {
 					this.addNodeToQueue(node, child, con);
 				}
 			

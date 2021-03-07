@@ -220,8 +220,7 @@ public class Circuit {
     	        			net.add(c);
     	        			
     	        			id++;
-    	        		}
-    	        		
+    	        		}    	        		
     	        		this.nets.add(new Net(net, boundingBoxRange));
         			}
         		}
