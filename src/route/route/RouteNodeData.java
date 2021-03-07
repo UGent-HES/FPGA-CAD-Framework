@@ -7,7 +7,9 @@ import route.util.CountingSet;
 public class RouteNodeData {
 	public final int index;
 	
+	//present congestion penalty
 	public float pres_cost;
+	//accumulated or historical congestion penalty
 	public float acc_cost;
 	
 	public float partial_path_cost;
