@@ -62,6 +62,12 @@ public class ResourceGraph {
 			List<RouteNode> temp = new ArrayList<>();
 			this.routeNodeMap.put(routeNodeType, temp);
 		}
+		
+		// Init log file
+//		statisticsLogger.println(""+this.circuit.getWidth());
+//		statisticsLogger.println(""+this.circuit.getHeight());
+//		statisticsLogger.println(""+this.width);
+//		statisticsLogger.println(""+this.height);
     }
     
     public void build(){
@@ -530,14 +536,14 @@ public class ResourceGraph {
 		}
 		return totalWireLength;
 	}
-	public void logCongestionHeatMap() {
-		statisticsLogger.println("Heatmap of wires");
-		statisticsLogger.println("centerx | centery | usage");
-		statisticsLogger.println("-------------------------");
-		for(RouteNode routeNode : this.routeNodes) {
-			if(routeNode.isWire) {
-				RouteNodeData data = routeNode.routeNodeData;
-				statisticsLogger.println(routeNode.centerx + "," + routeNode.centery + "," + data.occupation*1.0/routeNode.capacity);
+	public void logCongestionHeatMap(int iteration) {
+		statisticsLogger.println(""+iteration); // 1 number on the line means the iteration round 
+//		statisticsLogger.println("Heatmap of wires");
+//		statisticsLogger.println("index | occupation");
+//		statisticsLogger.println("-------------------------");
+		for(RouteNode routeNode : this.routeNodes) { 
+			if(routeNode.isWire && routeNode.overUsed()) { // only output overused nodes, not the occupied ones
+				statisticsLogger.println(routeNode.index + "," + routeNode.routeNodeData.occupation);
 			}
 		}
 	}

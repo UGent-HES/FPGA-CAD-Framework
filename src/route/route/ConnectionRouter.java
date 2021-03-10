@@ -318,7 +318,7 @@ public class ConnectionRouter {
 			
 			int wireLength = this.rrg.occupiedTotalWireLength();
 			
-			this.rrg.logCongestionHeatMap();
+			this.rrg.logCongestionHeatMap(itry);
 			
 			this.routeTimers.calculateStatistics.finish();
 			
