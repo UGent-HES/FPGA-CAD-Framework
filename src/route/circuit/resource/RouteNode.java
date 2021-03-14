@@ -152,6 +152,9 @@ public abstract class RouteNode implements Comparable<RouteNode> {
 	public boolean overUsed() {
 		return this.capacity < this.routeNodeData.occupation;
 	}
+	public int overUse() {
+		return this.routeNodeData.occupation - this.capacity;
+	}
 	public boolean used() {
 		return this.routeNodeData.occupation > 0;
 	}

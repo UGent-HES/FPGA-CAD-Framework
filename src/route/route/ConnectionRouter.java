@@ -18,7 +18,10 @@ public class ConnectionRouter {
 	final ResourceGraph rrg;
 	final Circuit circuit;
 	
-	private float pres_fac, pres_fac_mult = 2;
+	private float pres_fac;					// set how much overuse gets punished
+	private final float initial_pres_fac = 1f;
+	private final float pres_fac_mult = 3; 	// multiply pres_fac each iteration with this factor
+	private final float acc_fac = 1;		// set how much more overuse contributes to acc cost each iteration
 	private float alphaWLD = 1.4f; 	// weight factor for 	wire length delay 	in cost calculation
 	private float alphaTD = 0.7f;	// weight factor for 	timing delay 		in cost calculation
 	private float alphaC = 1f;		// weight factor for 	congestion			in cost calculation
@@ -204,10 +207,8 @@ public class ConnectionRouter {
     	this.nodesTouched.clear();
     	this.queue.clear();
 		
-    	float initial_pres_fac = 0.5f;
 		float pres_fac_mult = this.pres_fac_mult;
-		float acc_fac = 1;
-		this.pres_fac = initial_pres_fac;
+		this.pres_fac = this.initial_pres_fac;
 		
 		this.itry = 1;
 		
@@ -276,6 +277,7 @@ public class ConnectionRouter {
 
 				} else if (con.congested()) {
 					this.routeTimers.rerouteCongestion.start();
+					con.SetBoundingBoxRange(con.boundingBoxRange + 1);
 					this.routeConnection(con);
 					this.routeTimers.rerouteCongestion.finish();
 					
@@ -341,7 +343,7 @@ public class ConnectionRouter {
 			} else {
 				this.pres_fac *= pres_fac_mult;
 			}
-			this.updateCost(this.pres_fac, acc_fac);
+			this.updateCost(this.pres_fac, this.acc_fac);
 			this.routeTimers.updateCost.finish();
 			
 			this.itry++;
@@ -624,7 +626,7 @@ public class ConnectionRouter {
 			
 			//CHANX OR CHANY
 			if (child.isWire) {
-				if (con.isInNetBoundingBoxLimit(child)) {
+				if (con.isInConBoundingBoxLimit(child)) {
 					this.addNodeToQueue(node, child, con);
 				}
 			
@@ -781,15 +783,13 @@ public class ConnectionRouter {
 		RouteNodeData data = node.routeNodeData;
 		
 		boolean containsSource = countSourceUses != 0;
-		
 		//Present congestion cost
 		float pres_cost;
 		if (containsSource) {
-			int overoccupation = data.numUniqueSources() - node.capacity;
-			if (overoccupation < 0) {
+			if (!node.overUsed()) {
 				pres_cost = 1;
 			} else {
-				pres_cost = 1 + overoccupation * this.pres_fac;
+				pres_cost = 1 + node.overUse() * this.pres_fac;
 			}
 		} else {
 			pres_cost = data.pres_cost;
@@ -808,8 +808,8 @@ public class ConnectionRouter {
 	private void updateCost(float pres_fac, float acc_fac){
 		for (RouteNode node : this.rrg.getRouteNodes()) {
 			RouteNodeData data = node.routeNodeData;
-
-			int overuse = data.occupation - node.capacity;
+			
+			int overuse = node.overUse(); //assign to var so it doesn't have to recalculate
 			
 			//Present congestion penalty
 			if(overuse == 0) {
