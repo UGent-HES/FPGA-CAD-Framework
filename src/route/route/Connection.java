@@ -27,6 +27,10 @@ public class Connection implements Comparable<Connection>  {
     public int boundingBoxRange;
     //boundingBox is used for sorting Connections
     public int boundingBox;
+    public short x_min;
+	public short x_max;
+	public short y_min;
+	public short y_max;
     public short x_min_b;
 	public short x_max_b;
 	public short y_min_b;
@@ -76,7 +80,27 @@ public class Connection implements Comparable<Connection>  {
 		this.timingEdge = this.sinkTimingNode.getSourceEdge(0);
 		
 		//Bounding box		
-		this.boundingBox = this.calculateBoundingBox(0);
+		short sourceX = (short) this.source.getOwner().getColumn();
+		short sinkX = (short) this.sink.getOwner().getColumn();
+		if(sourceX < sinkX) {
+			x_min = sourceX;
+			x_max = sinkX;
+		} else {
+			x_min = sinkX;
+			x_max = sourceX;
+		}
+		
+		short sourceY = (short) this.source.getOwner().getRow();
+		short sinkY = (short) this.sink.getOwner().getRow();
+		if(sourceY < sinkY) {
+			y_min = sourceY;
+			y_max = sinkY;
+		} else {
+			y_min = sinkY;
+			y_max = sourceY;
+		}
+		
+		this.boundingBox =(x_max - x_min + 1) + (y_max - y_min + 1);this.calculateBoundingBox(0);
 		
 		//Route nodes
 		this.routeNodes = new ArrayList<>();
@@ -87,36 +111,12 @@ public class Connection implements Comparable<Connection>  {
 		this.net = null;
 	}
 	
-	private int calculateBoundingBox(int range) {
-		int min_x, max_x, min_y, max_y;
-		
-		int sourceX = this.source.getOwner().getColumn();
-		int sinkX = this.sink.getOwner().getColumn();
-		if(sourceX < sinkX) {
-			min_x = sourceX;
-			max_x = sinkX;
-		} else {
-			min_x = sinkX;
-			max_x = sourceX;
-		}
-		
-		int sourceY = this.source.getOwner().getRow();
-		int sinkY = this.sink.getOwner().getRow();
-		if(sourceY < sinkY) {
-			min_y = sourceY;
-			max_y = sinkY;
-		} else {
-			min_y = sinkY;
-			max_y = sourceY;
-		}
-		
+	private void calculateBoundingBox(int range) {		
 		this.boundingBoxRange = range;
-		this.x_max_b = (short) (max_x + this.boundingBoxRange);
-		this.x_min_b = (short) (min_x - this.boundingBoxRange);
-		this.y_max_b = (short) (max_y + this.boundingBoxRange);
-		this.y_min_b = (short) (min_y - this.boundingBoxRange);
-
-		return (max_x - min_x + 1) + (max_y - min_y + 1);
+		this.x_max_b = (short) (x_max + this.boundingBoxRange);
+		this.x_min_b = (short) (x_min - this.boundingBoxRange);
+		this.y_max_b = (short) (y_max + this.boundingBoxRange);
+		this.y_min_b = (short) (y_min - this.boundingBoxRange);
 	}
 	
 	public void setNet(Net net) {
