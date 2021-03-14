@@ -19,8 +19,9 @@ public class ConnectionRouter {
 	final Circuit circuit;
 	
 	private float pres_fac, pres_fac_mult = 2;
-	private float alphaWLD = 1.4f;
-	private float alphaTD = 0.7f;
+	private float alphaWLD = 1.4f; 	// weight factor for 	wire length delay 	in cost calculation
+	private float alphaTD = 0.7f;	// weight factor for 	timing delay 		in cost calculation
+	private float alphaC = 1f;		// weight factor for 	congestion			in cost calculation
 	
 	private float MIN_REROUTE_CRITICALITY = 0.85f, REROUTE_CRITICALITY;
 	private final List<Connection> criticalConnections;
@@ -663,14 +664,14 @@ public class ConnectionRouter {
 		// This is just an estimate and not an absolute lower bound.
 		// The routing algorithm is therefore not A* and optimal.
 		// It's directed search and heuristic.
-		float new_lower_bound_total_path_cost;
+		float new_lower_bound_total_path_cost = new_partial_path_cost;
 		if(child.isWire) {
 			//Expected remaining cost
 			RouteNode target = con.sinkRouteNode;
 			
 			this.set_expected_distance_to_target(child, target);
 			
-			float expected_distance_cost, expected_timing_cost;
+			float expected_distance_cost, expected_timing_cost, expected_congestion_cost;
 			
 			if(child.type.equals(RouteNodeType.CHANX)) {
 				expected_distance_cost = this.distance_same_dir * COST_PER_DISTANCE_HORIZONTAL + this.distance_ortho_dir * COST_PER_DISTANCE_VERTICAL;
@@ -681,10 +682,13 @@ public class ConnectionRouter {
 			}
 			
 			float expected_wire_cost = expected_distance_cost / (1 + countSourceUses) + IPIN_BASE_COST;
-			new_lower_bound_total_path_cost = new_partial_path_cost + this.alphaWLD * (1 - con.getCriticality()) * expected_wire_cost + this.alphaTD * con.getCriticality() * expected_timing_cost;
+			//TODO calculate congestion cost
+			expected_congestion_cost = 0;
+			
+			new_lower_bound_total_path_cost += this.alphaWLD * (1 - con.getCriticality()) * expected_wire_cost; //add wire length 	contribution to cost
+			new_lower_bound_total_path_cost += this.alphaTD * con.getCriticality() * expected_timing_cost;		//add timing 		contribution to cost
+			new_lower_bound_total_path_cost += this.alphaC * expected_congestion_cost; 							//add congestion 	contribution to cost
 		
-		} else {
-			new_lower_bound_total_path_cost = new_partial_path_cost;
 		}
 		
 		this.addNodeToQueue(child, node, new_partial_path_cost, new_lower_bound_total_path_cost);
