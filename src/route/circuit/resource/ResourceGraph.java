@@ -62,12 +62,6 @@ public class ResourceGraph {
 			List<RouteNode> temp = new ArrayList<>();
 			this.routeNodeMap.put(routeNodeType, temp);
 		}
-		
-		// Init log file
-//		statisticsLogger.println(""+this.circuit.getWidth());
-//		statisticsLogger.println(""+this.circuit.getHeight());
-//		statisticsLogger.println(""+this.width);
-//		statisticsLogger.println(""+this.height);
     }
     
     public void build(){
