@@ -536,7 +536,8 @@ public class ResourceGraph {
 //		statisticsLogger.println("index | occupation");
 //		statisticsLogger.println("-------------------------");
 		for(RouteNode routeNode : this.routeNodes) { 
-			if(routeNode.isWire && routeNode.overUsed()) { // only output overused nodes, not the occupied ones
+			//if(routeNode.isWire && routeNode.overUsed()) { // only output overused nodes, not the occupied ones
+			if(routeNode.isWire) { // output all nodes
 				statisticsLogger.println(routeNode.index + "," + routeNode.routeNodeData.occupation);
 			}
 		}
