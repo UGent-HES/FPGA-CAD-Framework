@@ -27,9 +27,9 @@ public class Comparators {
     		if(a.net.fanout < b.net.fanout){
     			return 1;
     		}else if(a.net.fanout == b.net.fanout){
-    			if(a.boundingBox > b.boundingBox){
+    			if(a.connectionBoxSize > b.connectionBoxSize){
     				return 1;
-    			}else if(a.boundingBox == b.boundingBox){
+    			}else if(a.connectionBoxSize == b.connectionBoxSize){
     				if(a.hashCode() > b.hashCode()){
     					return 1;
     				}else if(a.hashCode() < b.hashCode()){

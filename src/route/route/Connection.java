@@ -23,18 +23,12 @@ public class Connection implements Comparable<Connection>  {
 
     public Net net;
     
-    // boundingBoxRange is used f
-    public int boundingBoxRange;
-    //boundingBox is used for sorting Connections
-    public int boundingBox;
-    public short x_min;
-	public short x_max;
-	public short y_min;
-	public short y_max;
-    public short x_min_b;
-	public short x_max_b;
-	public short y_min_b;
-	public short y_max_b;
+	// connectionBoxSize is used for sorting Connections, not adjusted at runtime
+	public int connectionBoxSize;
+	public BoundingBox cb; // connectionBox - contains 4 sides separately.
+	public BoundingBox bb; // boundingBox
+	// boundingBoxRange is used for routing, adjusted at runtime
+	public BoundingBox bbRange; // ranges for 4 sides, will be adjusted & can be negative
 	
 	public final String netName;
 	
@@ -82,25 +76,30 @@ public class Connection implements Comparable<Connection>  {
 		//Bounding box		
 		short sourceX = (short) this.source.getOwner().getColumn();
 		short sinkX = (short) this.sink.getOwner().getColumn();
+		this.cb = new BoundingBox();
 		if(sourceX < sinkX) {
-			x_min = sourceX;
-			x_max = sinkX;
+			cb.x_min = sourceX;
+			cb.x_max = sinkX;
 		} else {
-			x_min = sinkX;
-			x_max = sourceX;
+			cb.x_min = sinkX;
+			cb.x_max = sourceX;
 		}
 		
 		short sourceY = (short) this.source.getOwner().getRow();
 		short sinkY = (short) this.sink.getOwner().getRow();
 		if(sourceY < sinkY) {
-			y_min = sourceY;
-			y_max = sinkY;
+			cb.y_min = sourceY;
+			cb.y_max = sinkY;
 		} else {
-			y_min = sinkY;
-			y_max = sourceY;
+			cb.y_min = sinkY;
+			cb.y_max = sourceY;
 		}
 		
-		this.boundingBox =(x_max - x_min + 1) + (y_max - y_min + 1);this.calculateBoundingBox(0);
+		this.connectionBoxSize = (cb.x_max - cb.x_min + 1) + (cb.y_max - cb.y_min + 1);
+		this.bb = new BoundingBox(); // empty initialization, is overwritten at net init
+		// If you want to initialize the bounding box range to 0:
+		//this.bbRange = new BoundingBox((short) 0); 
+		//this.updateBoundingBox();
 		
 		//Route nodes
 		this.routeNodes = new ArrayList<>();
@@ -111,20 +110,24 @@ public class Connection implements Comparable<Connection>  {
 		this.net = null;
 	}
 	
-	private void calculateBoundingBox(int range) {		
-		this.boundingBoxRange = range;
-		this.x_max_b = (short) (x_max + this.boundingBoxRange);
-		this.x_min_b = (short) (x_min - this.boundingBoxRange);
-		this.y_max_b = (short) (y_max + this.boundingBoxRange);
-		this.y_min_b = (short) (y_min - this.boundingBoxRange);
+	private void updateBoundingBox() {		
+		this.bb.x_max = (short) (cb.x_max + this.bbRange.x_max);
+		this.bb.x_min = (short) (cb.x_min - this.bbRange.x_min);
+		this.bb.y_max = (short) (cb.y_max + this.bbRange.y_max);
+		this.bb.y_min = (short) (cb.y_min - this.bbRange.y_min);
+	}
+	public void expandBoundingBoxRange(int uniformRange) {
+		this.bbRange.expand(uniformRange);
+		updateBoundingBox();
 	}
 	
 	public void setNet(Net net) {
 		this.net = net;
 	}
 		
-	public void SetBoundingBoxRange(int range) {
-		calculateBoundingBox(range);
+	public void SetBoundingBoxRange(short range) {
+		this.bbRange = new BoundingBox(range);
+		updateBoundingBox();
 	}
 
 	public boolean isInNetBoundingBoxLimit(RouteNode node) {
@@ -132,7 +135,7 @@ public class Connection implements Comparable<Connection>  {
 	}
 	
 	public boolean isInConBoundingBoxLimit(RouteNode node) {
-		return node.xlow < this.x_max_b && node.xhigh > this.x_min_b && node.ylow < this.y_max_b && node.yhigh > this.y_min_b;
+		return node.xlow < this.bb.x_max && node.xhigh > this.bb.x_min && node.ylow < this.bb.y_max && node.yhigh > this.bb.y_min;
 
 	}
 	

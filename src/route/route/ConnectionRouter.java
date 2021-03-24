@@ -320,10 +320,12 @@ public class ConnectionRouter {
     		for(Connection con : sortedListOfConnections) {
     			// METHOD: enlarge when congested
     			if (con.congested()) {
-    				con.SetBoundingBoxRange(con.boundingBoxRange + 1);
+    				con.expandBoundingBoxRange(1);
     			}
     			// METHOD: enlarge when close to border
+    			// TODO: reference VPR properly for this part of their code (this part should be MIT)
     			//dynamic_update_bounding_boxes() // (see also https://github.com/verilog-to-routing/vtr-verilog-to-routing/blob/08f054c85e22ddf33811d91b2dd45daf5ee2341e/vpr/src/route/route_timing.cpp#L1849)
+    			
     			
     			// METHOD: enlarge when hotspot is threatening
     			//BB resize based on shape of hotspots 
