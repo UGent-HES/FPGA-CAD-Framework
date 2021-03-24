@@ -11,6 +11,7 @@ public class RouteTimers {
 	public Timer setRerouteCriticality;
 	public Timer calculateStatistics;
 	public Timer updateCost;
+	public Timer congestionLookahead;
 	
 	public RouteTimers() {
 		this.firstIteration        = new Timer("first iteration");
@@ -23,6 +24,7 @@ public class RouteTimers {
 		this.setRerouteCriticality = new Timer("set reroute crit");
 		this.calculateStatistics   = new Timer("calc stat");
 		this.updateCost            = new Timer("update cost");
+		this.congestionLookahead   = new Timer("congestion lookahead");
 	}
 	
 	@Override
@@ -39,6 +41,7 @@ public class RouteTimers {
 		result += this.calculateStatistics;
 		result += this.updateTiming;
 		result += this.updateCost;
+		result += this.congestionLookahead;
 		
 		return result;
 	}

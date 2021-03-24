@@ -277,11 +277,10 @@ public class ConnectionRouter {
 
 				} else if (con.congested()) {
 					this.routeTimers.rerouteCongestion.start();
-					con.SetBoundingBoxRange(con.boundingBoxRange + 1);
 					this.routeConnection(con);
 					this.routeTimers.rerouteCongestion.finish();
 					
-				}else if (con.net.hasOpin() && !con.getOpin().equals(con.net.getOpin())) {
+				} else if (con.net.hasOpin() && !con.getOpin().equals(con.net.getOpin())) {
 					this.routeTimers.rerouteOpin.start();
 					this.routeConnection(con);
 					this.routeTimers.rerouteOpin.finish();
@@ -311,6 +310,25 @@ public class ConnectionRouter {
 			maxDelayString = String.format("%9.3f", maxDelay);
 
 			this.routeTimers.updateTiming.finish();
+			
+			// Congestion detection - cluster analysis
+			this.routeTimers.congestionLookahead.start();
+			//do congestion detection here
+			//this is meant for techniques working on the whole rrg.
+			
+			// Apply congestion lookahead information on the boundingBox
+    		for(Connection con : sortedListOfConnections) {
+    			// METHOD: enlarge when congested
+    			if (con.congested()) {
+    				con.SetBoundingBoxRange(con.boundingBoxRange + 1);
+    			}
+    			// METHOD: enlarge when close to border
+    			//dynamic_update_bounding_boxes() // (see also https://github.com/verilog-to-routing/vtr-verilog-to-routing/blob/08f054c85e22ddf33811d91b2dd45daf5ee2341e/vpr/src/route/route_timing.cpp#L1849)
+    			
+    			// METHOD: enlarge when hotspot is threatening
+    			//BB resize based on shape of hotspots 
+    		}
+    		this.routeTimers.congestionLookahead.finish();
 			
 			// Calculate statistics
 			this.routeTimers.calculateStatistics.start();
