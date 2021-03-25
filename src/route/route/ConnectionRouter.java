@@ -31,6 +31,8 @@ public class ConnectionRouter {
 	
 	private int MAX_PERCENTAGE_CRITICAL_CONNECTIONS = 3;
 	
+	private final short DYNAMIC_BB_DELTA_THRESHOLD = 2; // distance between routeNode of connections & BoundingBox (BB) before the BB of this connection enlarges. 
+	
 	private final PriorityQueue<QueueElement> queue;
 	
 	private final Collection<RouteNodeData> nodesTouched;
@@ -238,9 +240,9 @@ public class ConnectionRouter {
 		System.out.printf("%-22s | %d\n", "Max per crit con", MAX_PERCENTAGE_CRITICAL_CONNECTIONS);
 		System.out.printf("%-22s | %.1f\n", "Pres fac mult", this.pres_fac_mult);
 		
-        System.out.printf("--------------------------------------------------------------------------------------------------------------\n");
-        System.out.printf("%9s  %8s  %8s  %12s  %9s  %11s  %17s  %11s  %9s\n", "Iteration", "AlphaWLD", "AlphaTD", "Reroute Crit", "Time (ms)", "Conn routed", "Overused RR Nodes", "Wire-Length", "Max Delay");
-        System.out.printf("---------  --------  --------  ------------  ---------  -----------  -----------------  -----------  ---------\n");
+        System.out.printf("---------------------------------------------------------------------------------------------------------------------------\n");
+        System.out.printf("%9s  %8s  %8s  %12s  %9s  %11s  %17s  %11s  %11s  %9s\n", "Iteration", "AlphaWLD", "AlphaTD", "Reroute Crit", "Time (ms)", "Conn routed", "Overused RR Nodes", "Expanded BB", "Wire-Length", "Max Delay");
+        System.out.printf("---------  --------  --------  ------------  ---------  -----------  -----------------  -----------  -----------  ---------\n");
         
         boolean validRouting;
         
@@ -312,6 +314,7 @@ public class ConnectionRouter {
 			this.routeTimers.updateTiming.finish();
 			
 			// Congestion detection - cluster analysis
+			int connectionBoxesUpdated = 0;
 			this.routeTimers.congestionLookahead.start();
 			//do congestion detection here
 			//this is meant for techniques working on the whole rrg.
@@ -319,13 +322,14 @@ public class ConnectionRouter {
 			// Apply congestion lookahead information on the boundingBox
     		for(Connection con : sortedListOfConnections) {
     			// METHOD: enlarge when congested
-    			if (con.congested()) {
-    				con.expandBoundingBoxRange(1);
-    			}
+//    			if (con.congested()) {
+//    				con.expandBoundingBoxRange(1);
+//    			}
     			// METHOD: enlarge when close to border
     			// TODO: reference VPR properly for this part of their code (this part should be MIT)
-    			//dynamic_update_bounding_boxes() // (see also https://github.com/verilog-to-routing/vtr-verilog-to-routing/blob/08f054c85e22ddf33811d91b2dd45daf5ee2341e/vpr/src/route/route_timing.cpp#L1849)
-    			
+    			if (con.dynamicUpdateBoundingBox(DYNAMIC_BB_DELTA_THRESHOLD)) {
+    				connectionBoxesUpdated++;
+    			} // (see also https://github.com/verilog-to-routing/vtr-verilog-to-routing/blob/08f054c85e22ddf33811d91b2dd45daf5ee2341e/vpr/src/route/route_timing.cpp#L1849)
     			
     			// METHOD: enlarge when hotspot is threatening
     			//BB resize based on shape of hotspots 
@@ -349,7 +353,7 @@ public class ConnectionRouter {
 			long iterationEnd = System.nanoTime();
 			int rt = (int) Math.round((iterationEnd-iterationStart) * Math.pow(10, -6));
 			
-			System.out.printf("%9d  %8.2f  %8.2f  %12.3f  %9d  %11d  %8d  %6.2f%%  %11d  %s\n", this.itry, this.alphaWLD, this.alphaTD, REROUTE_CRITICALITY, rt, this.connectionsRoutedIteration, overUsed, overUsePercentage, wireLength, maxDelayString);
+			System.out.printf("%9d  %8.2f  %8.2f  %12.3f  %9d  %11d  %8d  %6.2f%%  %11d  %11d  %s\n", this.itry, this.alphaWLD, this.alphaTD, REROUTE_CRITICALITY, rt, this.connectionsRoutedIteration, overUsed, overUsePercentage, connectionBoxesUpdated, wireLength, maxDelayString);
 
 			// Check if the routing is valid, if realizable return, the routing succeeded
 			if (validRouting) {
