@@ -28,7 +28,7 @@ public class Connection implements Comparable<Connection>  {
 	public BoundingBox cb; // connectionBox - contains 4 sides separately.
 	public BoundingBox bb; // boundingBox
 	// boundingBoxRange is used for routing, adjusted at runtime
-	public BoundingBox bbRange; // ranges for 4 sides, will be adjusted & can be negative
+	public BoundingBoxRange bbRange; // ranges for 4 sides, will be adjusted & can be negative
 	
 	public final String netName;
 	
@@ -110,7 +110,7 @@ public class Connection implements Comparable<Connection>  {
 		this.net = null;
 	}
 	
-	private void updateBoundingBox() {		
+	private void updateBoundingBox() {
 		this.bb.x_max = (short) (cb.x_max + this.bbRange.x_max);
 		this.bb.x_min = (short) (cb.x_min - this.bbRange.x_min);
 		this.bb.y_max = (short) (cb.y_max + this.bbRange.y_max);
@@ -126,7 +126,7 @@ public class Connection implements Comparable<Connection>  {
 	}
 		
 	public void SetBoundingBoxRange(short range) {
-		this.bbRange = new BoundingBox(range);
+		this.bbRange = new BoundingBoxRange(range);
 		updateBoundingBox();
 	}
 
