@@ -27,6 +27,9 @@ import route.route.Net;
 public class Circuit {
     private String name;
     private int width, height;
+    // WARNING - ASSUMPTION: there will only be 1 instance of Circuit
+    // Then we don't have to point to a specific instance of Circuit from a Connection object, where we *do* need the width & height of the circuit
+    public static short maxWidth, maxHeight; 
 
     private Architecture architecture;
     private TimingGraph timingGraph;
@@ -250,6 +253,7 @@ public class Circuit {
             this.height = this.architecture.getHeight();
             System.out.println("Fixed size: " +  this.width + "x" + this.height + "\n");
         }
+        setDimensions(); // also make width & height static
     }
     
     private void autoSize(BlockType ioType, List<BlockType> blockTypes) {
@@ -470,5 +474,9 @@ public class Circuit {
     @Override
     public String toString() {
         return this.getName();
+    }
+    public void setDimensions() {
+    	Circuit.maxHeight = (short) this.height;
+    	Circuit.maxWidth = (short) this.width;
     }
 }

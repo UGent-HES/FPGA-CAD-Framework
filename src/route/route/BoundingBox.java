@@ -1,5 +1,7 @@
 package route.route;
 
+import route.circuit.resource.RouteNode;
+
 // It's a class because Java has no structs
 // Purpose: group simple named values together (seperated into 'BoundingBox' and a 'BoundingBoxRange', for static analysis)
 
@@ -39,6 +41,17 @@ class BoundingBox extends Box {
 		this.x_max += bbRange.x_max;
 		this.y_min -= bbRange.y_min;
 		this.y_max += bbRange.y_max;
+		return this;
+	}
+	public BoundingBox expand(RouteNode rn) {
+    	// The router interprets RR nodes which cross the boundary as being
+        // 'within' of the BB. Only those which are *strictly* out side the
+        // box are excluded, hence we use the nodes xhigh/yhigh for xmin/xmax,
+        // and xlow/ylow for xmax/ymax calculations
+		x_min = (short) Math.min(x_min, rn.xhigh);
+		y_min = (short) Math.min(y_min, rn.yhigh);
+		x_max = (short) Math.max(x_max, rn.xlow);
+		y_max = (short) Math.max(y_max, rn.ylow);
 		return this;
 	}
 	

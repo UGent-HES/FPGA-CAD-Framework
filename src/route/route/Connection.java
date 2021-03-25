@@ -3,6 +3,7 @@ package route.route;
 import java.util.ArrayList;
 import java.util.List;
 
+import route.circuit.Circuit;
 import route.circuit.pin.GlobalPin;
 import route.circuit.resource.Opin;
 import route.circuit.resource.RouteNode;
@@ -115,12 +116,38 @@ public class Connection implements Comparable<Connection>  {
 
 	// Returns the bounding box of a connection's used routing resources
 	public BoundingBox calculateUsedBoundingBox() {
-	    BoundingBox bb = new BoundingBox();
-//	    bb.x_min = grid.width() - 1;
-//	    bb.y_min = grid.height() - 1;
-//	    bb.x_max = 0;
-//	    bb.y_max = 0;
+	    BoundingBox bb = new BoundingBox(Short.MAX_VALUE, (short) 0, Short.MAX_VALUE, (short) 0);
+	    
+	    for(RouteNode rn : this.routeNodes){
+	    	bb.expand(rn); // expand to encompass rn
+		}
 	    return bb;
+	}
+	
+	public boolean dynamicUpdateBoundingBox(short dynamicBBDeltaThreshold) {
+		boolean updatedBB = false;
+		BoundingBox bb = getBB();
+		BoundingBox usedBB = this.calculateUsedBoundingBox();
+		BoundingBoxRange delta = bb.delta(usedBB);
+		
+		if (delta.x_min <= dynamicBBDeltaThreshold && bb.x_min > 0) {
+			this.bbRange.x_min++; // we increase the range, thus decreasing the BB
+            updatedBB = true;
+        }
+		if (delta.y_min <= dynamicBBDeltaThreshold && bb.y_min > 0) {
+			this.bbRange.y_min++;
+            updatedBB = true;
+        }
+        if (delta.x_max <= dynamicBBDeltaThreshold && bb.x_max < Circuit.maxWidth - 1) {
+            this.bbRange.x_max++;
+            updatedBB = true;
+        }
+        if (delta.y_max <= dynamicBBDeltaThreshold && bb.y_max < Circuit.maxHeight - 1) {
+            this.bbRange.y_max++;
+            updatedBB = true;
+        }
+		
+		return updatedBB;
 	}
 	
 	public void setNet(Net net) {
