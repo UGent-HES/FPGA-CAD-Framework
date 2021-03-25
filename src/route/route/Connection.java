@@ -40,7 +40,7 @@ public class Connection implements Comparable<Connection>  {
 	public Connection(int id, GlobalPin source, GlobalPin sink) {
 		this.id = id;
 
-		//Source
+		// Source
 		this.source = source;
 		String sourceName = null;
 		if(this.source.getPortType().isEquivalent()) {
@@ -52,7 +52,7 @@ public class Connection implements Comparable<Connection>  {
 		if(!source.hasTimingNode()) System.err.println(source + " => " + sink + " | Source " + source + " has no timing node");
 		this.sourceTimingNode = this.source.getTimingNode();
 		
-		//Sink
+		// Sink
 		this.sink = sink;
 		String sinkName = null;
 		if(this.sink.getPortType().isEquivalent()) {
@@ -64,7 +64,7 @@ public class Connection implements Comparable<Connection>  {
 		if(!sink.hasTimingNode()) System.out.println(source + " => " + sink + " | Sink " + sink + " has no timing node");
 		this.sinkTimingNode = this.sink.getTimingNode();
 		
-		//Timing edge of the connection
+		// Timing edge of the connection
 		if(this.sinkTimingNode.getSourceEdges().size() != 1) {
 			System.err.println("The connection should have only one edge => " + this.sinkTimingNode.getSourceEdges().size());
 		}
@@ -73,7 +73,7 @@ public class Connection implements Comparable<Connection>  {
 		}
 		this.timingEdge = this.sinkTimingNode.getSourceEdge(0);
 		
-		//Bounding box		
+		// Bounding box
 		short sourceX = (short) this.source.getOwner().getColumn();
 		short sinkX = (short) this.sink.getOwner().getColumn();
 		this.cb = new BoundingBox();
@@ -98,35 +98,43 @@ public class Connection implements Comparable<Connection>  {
 		this.connectionBoxSize = (cb.x_max - cb.x_min + 1) + (cb.y_max - cb.y_min + 1);
 		this.bb = new BoundingBox(); // empty initialization, is overwritten at net init
 		// If you want to initialize the bounding box range to 0:
-		//this.bbRange = new BoundingBox((short) 0); 
+		//this.bbRange = new BoundingBoxRange((short) 0);
 		//this.updateBoundingBox();
 		
-		//Route nodes
+		// Route nodes
 		this.routeNodes = new ArrayList<>();
 		
-		//Net name
+		// Net name
 		this.netName = this.source.getNetName();
 		
 		this.net = null;
 	}
 	
 	private void updateBoundingBox() {
-		this.bb.x_max = (short) (cb.x_max + this.bbRange.x_max);
-		this.bb.x_min = (short) (cb.x_min - this.bbRange.x_min);
-		this.bb.y_max = (short) (cb.y_max + this.bbRange.y_max);
-		this.bb.y_min = (short) (cb.y_min - this.bbRange.y_min);
+		// needed for consistency, maybe we should change this to compute bb on the fly
+		bb = cb.add(bbRange);
 	}
 	public void expandBoundingBoxRange(int uniformRange) {
 		this.bbRange.expand(uniformRange);
 		updateBoundingBox();
+	}
+
+	// Returns the bounding box of a connection's used routing resources
+	public BoundingBox calculateUsedBoundingBox() {
+	    BoundingBox bb = new BoundingBox();
+//	    bb.x_min = grid.width() - 1;
+//	    bb.y_min = grid.height() - 1;
+//	    bb.x_max = 0;
+//	    bb.y_max = 0;
+	    return bb;
 	}
 	
 	public void setNet(Net net) {
 		this.net = net;
 	}
 		
-	public void SetBoundingBoxRange(short range) {
-		this.bbRange = new BoundingBoxRange(range);
+	public void setBoundingBoxRange(BoundingBoxRange bbRange) {
+		this.bbRange = bbRange;
 		updateBoundingBox();
 	}
 

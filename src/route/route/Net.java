@@ -11,18 +11,14 @@ import route.circuit.resource.Opin;
 import route.circuit.resource.RouteNode;
 import route.circuit.resource.Sink;
 import route.circuit.resource.Source;
-import route.route.Connection;
 
 public class Net {
 	private int id; //Unique ID, is ID of the first connection in the net, which is also unique.
 	private final List<Connection> connections;
 	public final int fanout;
 	
-	private short boundingBoxRange;
-	public final short x_min_b;
-	public final short x_max_b;
-	public final short y_min_b;
-	public final short y_max_b;
+	private BoundingBoxRange bbRange;
+	public final BoundingBox bb;
 	
 	public final float x_geo;
 	public final float y_geo;
@@ -32,13 +28,17 @@ public class Net {
 	private Opin fixedOpin;
 	
 	public Net(List<Connection> net, short boundingBoxRange) {
+		this(net, new BoundingBoxRange(boundingBoxRange));
+	}
+
+	public Net(List<Connection> net, BoundingBoxRange boundingBoxRange) {
 		this.id = net.get(0).id;
 		this.connections = net;
 		//fanout = nr of connection in net
 		this.fanout = net.size();
 		
 		//boundingBoxRange is used for routing all connections in net
-		this.boundingBoxRange = boundingBoxRange;
+		this.bbRange = boundingBoxRange;
 		
 		List<Short> xCoordinatesBB = new ArrayList<>();
 		List<Short> yCoordinatesBB = new ArrayList<>();
@@ -128,21 +128,18 @@ public class Net {
 		this.x_geo = xGeomeanSum / (1 + this.fanout);
 		this.y_geo = yGeomeanSum / (1 + this.fanout);
 		
-		this.x_max_b = (short) (x_max + this.boundingBoxRange);
-		this.x_min_b = (short) (x_min - this.boundingBoxRange);
-		this.y_max_b = (short) (y_max + this.boundingBoxRange);
-		this.y_min_b = (short) (y_min - this.boundingBoxRange);
+		this.bb = new BoundingBox(x_min, x_max, y_min, y_max).expand(this.bbRange);
 		
 		for(Connection connection : this.connections) {
 			connection.setNet(this);
-			connection.SetBoundingBoxRange(this.boundingBoxRange);
+			connection.setBoundingBoxRange(new BoundingBoxRange(this.bbRange));
 		}
 		
 		this.fixedOpin = null;
 	}
 	
 	public boolean isInBoundingBoxLimit(RouteNode node) {
-		return  node.xlow < this.x_max_b && node.xhigh > this.x_min_b && node.ylow < this.y_max_b && node.yhigh > this.y_min_b;
+		return  node.xlow < this.bb.x_max && node.xhigh > this.bb.x_min && node.ylow < this.bb.y_max && node.yhigh > this.bb.y_min;
 	}
 	
 	public int wireLength() {
