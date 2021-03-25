@@ -46,9 +46,20 @@ class BoundingBox extends Box {
 		BoundingBox bb = new BoundingBox(this);
 		return bb.expand(bbRange);
 	}
+	
+	public BoundingBoxRange delta(BoundingBox inner) {
+		// if inner is the smallest Box, then the resulting delta is positive
+		BoundingBoxRange delta = new BoundingBoxRange();
+		delta.x_min = (short) (inner.x_min - this.x_min);
+		delta.x_max = (short) (this.x_max - inner.x_max);
+		delta.y_min = (short) (inner.y_min - this.y_min);
+		delta.y_max = (short) (this.y_max - inner.y_max);
+		return delta;
+	}
 }
 
 class BoundingBoxRange extends Box {
+	public BoundingBoxRange() {}
 	public BoundingBoxRange(short uniformRange) {
 		this(uniformRange, uniformRange, uniformRange, uniformRange);
 	}
