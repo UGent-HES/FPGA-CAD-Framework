@@ -12,12 +12,9 @@ import route.circuit.Circuit;
 import route.circuit.architecture.Architecture;
 import route.circuit.architecture.BlockCategory;
 import route.circuit.architecture.BlockType;
-import route.circuit.resource.Site;
-import route.circuit.resource.RouteNode;
 import route.main.Logger;
 import route.main.Logger.Location;
 import route.main.Logger.Stream;
-import route.route.RouteNodeData;
 
 public class ResourceGraph {
 	private final Circuit circuit;

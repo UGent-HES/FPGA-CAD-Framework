@@ -26,7 +26,7 @@ public class Connection implements Comparable<Connection>  {
 	// connectionBoxSize is used for sorting Connections, not adjusted at runtime
 	public int connectionBoxSize;
 	public BoundingBox cb; // connectionBox - contains 4 sides separately.
-	public BoundingBox bb; // boundingBox
+	//public BoundingBox bb; - not used to prevent consistency problems, we compute it on the fly // boundingBox
 	// boundingBoxRange is used for routing, adjusted at runtime
 	public BoundingBoxRange bbRange; // ranges for 4 sides, will be adjusted & can be negative
 	
@@ -96,10 +96,9 @@ public class Connection implements Comparable<Connection>  {
 		}
 		
 		this.connectionBoxSize = (cb.x_max - cb.x_min + 1) + (cb.y_max - cb.y_min + 1);
-		this.bb = new BoundingBox(); // empty initialization, is overwritten at net init
+		// empty initialization, is overwritten at net init
 		// If you want to initialize the bounding box range to 0:
 		//this.bbRange = new BoundingBoxRange((short) 0);
-		//this.updateBoundingBox();
 		
 		// Route nodes
 		this.routeNodes = new ArrayList<>();
@@ -110,13 +109,8 @@ public class Connection implements Comparable<Connection>  {
 		this.net = null;
 	}
 	
-	private void updateBoundingBox() {
-		// needed for consistency, maybe we should change this to compute bb on the fly
-		bb = cb.add(bbRange);
-	}
 	public void expandBoundingBoxRange(int uniformRange) {
 		this.bbRange.expand(uniformRange);
-		updateBoundingBox();
 	}
 
 	// Returns the bounding box of a connection's used routing resources
@@ -135,7 +129,6 @@ public class Connection implements Comparable<Connection>  {
 		
 	public void setBoundingBoxRange(BoundingBoxRange bbRange) {
 		this.bbRange = bbRange;
-		updateBoundingBox();
 	}
 
 	public boolean isInNetBoundingBoxLimit(RouteNode node) {
@@ -143,8 +136,8 @@ public class Connection implements Comparable<Connection>  {
 	}
 	
 	public boolean isInConBoundingBoxLimit(RouteNode node) {
-		return node.xlow < this.bb.x_max && node.xhigh > this.bb.x_min && node.ylow < this.bb.y_max && node.yhigh > this.bb.y_min;
-
+		BoundingBox bb = getBB();
+		return node.xlow < bb.x_max && node.xhigh > bb.x_min && node.ylow < bb.y_max && node.yhigh > bb.y_min;
 	}
 	
 	public void addRouteNode(RouteNode routeNode) {
@@ -221,6 +214,9 @@ public class Connection implements Comparable<Connection>  {
 		return false;
 	}
 	
+	public BoundingBox getBB() {
+		return cb.add(bbRange);
+	}
 	public Opin getOpin() {
 		if(this.routeNodes.isEmpty()) {
 			return null;
