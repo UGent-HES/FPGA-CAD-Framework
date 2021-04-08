@@ -12,20 +12,22 @@ public class Logger {
 
     private String[] filenames = new String[Stream.values().length];
     private PrintWriter[] writers = new PrintWriter[Stream.values().length];
-
+    public static String outfile;
 
     public Logger() {
 
         // I only want dots as decimal separators
         Locale.setDefault(new Locale("en", "US"));
 
-        this.filenames[Stream.OUT.ordinal()] = "out.log";
+        this.filenames[Stream.OUT.ordinal()] = outfile;
         this.filenames[Stream.ERR.ordinal()] = "out.err";
 
         this.setLocation(Stream.OUT, Location.STDOUT);
         this.setLocation(Stream.ERR, Location.STDERR);
     }
-
+    public static void setOutFile(String name) {
+    	outfile = name;
+    }
 
     public void setLocation(Stream stream, Location location) {
         this.openWriter(stream, location);

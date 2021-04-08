@@ -31,6 +31,7 @@ public class Main {
 	
 	private String circuitName;
 	private File architectureFile, blifFile, netFile, placeFile, lookupDumpFile, sdcFile, rrgFile;
+	private String outputFile;
 	
 	private Circuit circuit;
 
@@ -50,11 +51,15 @@ public class Main {
  				this.lookupDumpFile = new File(arguments[++i]);
 			} else if(arguments[i].contains("rr_graph_file")) {
 				this.rrgFile = new File(arguments[++i]);
+			} else if(arguments[i].contains("output_file")) {
+				this.outputFile = arguments[++i];
 			}
 		}
 		
-		this.logger = logger;
+		Logger.setOutFile(this.outputFile);
 		
+		this.logger = logger;
+				
 		this.circuitName = this.blifFile.getName().replaceFirst("(.+)\\.blif", "$1");
 		this.logger.println("Circuit : " + this.circuitName);
 		
