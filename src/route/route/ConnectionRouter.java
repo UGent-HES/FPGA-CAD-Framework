@@ -50,6 +50,8 @@ public class ConnectionRouter {
 	
 	private RouteTimers routeTimers;
 	
+	public static enum CongestionLookAheadMethod {NONE, GROW_WHEN_CONGESTED, CLOSE_TO_BORDER, HOTSPOT_DETECTION}; // Different modes of congestion lookahead
+	public static final CongestionLookAheadMethod CONGESTION_LOOK_AHEAD_METHOD = CongestionLookAheadMethod.NONE;
 	public static final boolean DEBUG = true;
 	
 	public ConnectionRouter(ResourceGraph rrg, Circuit circuit) {
@@ -316,24 +318,34 @@ public class ConnectionRouter {
 			// Congestion detection - cluster analysis
 			int connectionBoxesUpdated = 0;
 			this.routeTimers.congestionLookahead.start();
-			//do congestion detection here
-			//this is meant for techniques working on the whole rrg.
-			
+			if (CONGESTION_LOOK_AHEAD_METHOD == CongestionLookAheadMethod.HOTSPOT_DETECTION) {
+				//do congestion detection here
+				//this is meant for techniques working on the whole rrg.
+			}
 			// Apply congestion lookahead information on the boundingBox
-    		for(Connection con : sortedListOfConnections) {
-    			// METHOD: enlarge when congested
-//    			if (con.congested()) {
-//    				con.expandBoundingBoxRange(1);
-//    			}
-    			// METHOD: enlarge when close to border
-    			// TODO: reference VPR properly for this part of their code (this part should be MIT)
-    			if (con.dynamicUpdateBoundingBox(DYNAMIC_BB_DELTA_THRESHOLD)) {
-    				connectionBoxesUpdated++;
-    			} // (see also https://github.com/verilog-to-routing/vtr-verilog-to-routing/blob/08f054c85e22ddf33811d91b2dd45daf5ee2341e/vpr/src/route/route_timing.cpp#L1849)
-    			
-    			// METHOD: enlarge when hotspot is threatening
-    			//BB resize based on shape of hotspots 
-    		}
+			for(Connection con : sortedListOfConnections) {
+				switch (CONGESTION_LOOK_AHEAD_METHOD) {
+				case NONE:
+					break;
+				case GROW_WHEN_CONGESTED:
+					// METHOD: enlarge when congested
+					if (con.congested()) { // TODO: put before switch (?)
+						con.expandBoundingBoxRange(1);
+					}
+					break;
+				case CLOSE_TO_BORDER:
+					// METHOD: enlarge when close to border
+					// TODO: reference VPR properly for this part of their code (this part should be MIT)
+					if (con.dynamicUpdateBoundingBox(DYNAMIC_BB_DELTA_THRESHOLD)) {
+						connectionBoxesUpdated++;
+					} // (see also https://github.com/verilog-to-routing/vtr-verilog-to-routing/blob/08f054c85e22ddf33811d91b2dd45daf5ee2341e/vpr/src/route/route_timing.cpp#L1849)
+					break;
+				case HOTSPOT_DETECTION:
+					// METHOD: enlarge when hotspot is threatening
+					//BB resize based on shape of hotspots
+					break;
+				}
+			}
     		this.routeTimers.congestionLookahead.finish();
 			
 			// Calculate statistics
