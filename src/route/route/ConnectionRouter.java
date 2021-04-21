@@ -1,6 +1,7 @@
 package route.route;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.HashSet;
@@ -22,9 +23,11 @@ public class ConnectionRouter {
 	private final float initial_pres_fac = 1f;
 	private final float pres_fac_mult = 3; 	// multiply pres_fac each iteration with this factor
 	private final float acc_fac = 1;		// set how much more overuse contributes to acc cost each iteration
-	private float alphaWLD = 1.4f; 	// weight factor for 	wire length delay 	in cost calculation
-	private float alphaTD = 0.7f;	// weight factor for 	timing delay 		in cost calculation
-	private float alphaC = 1f;		// weight factor for 	congestion			in cost calculation
+	private float alphaWLD = 1.4f; 			// weight factor for 	wire length delay 	in cost calculation
+	private float alphaTD = 0.7f;			// weight factor for 	timing delay 		in cost calculation
+	private float alphaC = (float)1e-11;	// weight factor for 	congestion			in cost calculation
+	
+	private ZoneManager zoneManager;
 	
 	private float MIN_REROUTE_CRITICALITY = 0.85f, REROUTE_CRITICALITY;
 	private final List<Connection> criticalConnections;
@@ -51,7 +54,7 @@ public class ConnectionRouter {
 	private RouteTimers routeTimers;
 	
 	public static enum CongestionLookAheadMethod {NONE, GROW_WHEN_CONGESTED, CLOSE_TO_BORDER, HOTSPOT_DETECTION}; // Different modes of congestion lookahead
-	public static final CongestionLookAheadMethod CONGESTION_LOOK_AHEAD_METHOD = CongestionLookAheadMethod.NONE;
+	public static final CongestionLookAheadMethod CONGESTION_LOOK_AHEAD_METHOD = CongestionLookAheadMethod.CLOSE_TO_BORDER;
 	public static final boolean DEBUG = true;
 	
 	public ConnectionRouter(ResourceGraph rrg, Circuit circuit) {
@@ -76,6 +79,8 @@ public class ConnectionRouter {
 		this.nodesExpanded = 0;
 		
 		this.routeTimers = new RouteTimers();
+		
+		this.zoneManager = new ZoneManager(6,4);
 	}
 	
 	private float getAverageCost(RouteNodeType type) {
@@ -322,6 +327,9 @@ public class ConnectionRouter {
 				//do congestion detection here
 				//this is meant for techniques working on the whole rrg.
 			}
+			//clear zone congestion
+			zoneManager.clearZoneCongestion();
+			
 			// Apply congestion lookahead information on the boundingBox
 			for(Connection con : sortedListOfConnections) {
 				switch (CONGESTION_LOOK_AHEAD_METHOD) {
@@ -331,6 +339,7 @@ public class ConnectionRouter {
 					// METHOD: enlarge when congested
 					if (con.congested()) { // TODO: put before switch (?)
 						con.expandBoundingBoxRange(1);
+						
 					}
 					break;
 				case CLOSE_TO_BORDER:
@@ -338,6 +347,7 @@ public class ConnectionRouter {
 					// TODO: reference VPR properly for this part of their code (this part should be MIT)
 					if (con.dynamicUpdateBoundingBox(DYNAMIC_BB_DELTA_THRESHOLD)) {
 						connectionBoxesUpdated++;
+						zoneManager.AddCongestionData(con);
 					} // (see also https://github.com/verilog-to-routing/vtr-verilog-to-routing/blob/08f054c85e22ddf33811d91b2dd45daf5ee2341e/vpr/src/route/route_timing.cpp#L1849)
 					break;
 				case HOTSPOT_DETECTION:
@@ -346,6 +356,10 @@ public class ConnectionRouter {
 					break;
 				}
 			}
+			
+			//normalize zone congestion
+			zoneManager.Normalize();
+			
     		this.routeTimers.congestionLookahead.finish();
 			
 			// Calculate statistics
@@ -720,8 +734,7 @@ public class ConnectionRouter {
 			}
 			
 			float expected_wire_cost = expected_distance_cost / (1 + countSourceUses) + IPIN_BASE_COST;
-			//TODO calculate congestion cost
-			expected_congestion_cost = 0;
+			expected_congestion_cost = zoneManager.getZoneCongestion(node);
 			
 			new_lower_bound_total_path_cost += this.alphaWLD * (1 - con.getCriticality()) * expected_wire_cost; //add wire length 	contribution to cost
 			new_lower_bound_total_path_cost += this.alphaTD * con.getCriticality() * expected_timing_cost;		//add timing 		contribution to cost
