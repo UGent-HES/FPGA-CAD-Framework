@@ -2,6 +2,8 @@ package route.route;
 
 import java.util.Comparator;
 
+import route.circuit.resource.RouteNode;
+
 /*
  * obj1 and obj2 are the objects to be compared.
  * This method returns zero if the objects are equal.
@@ -17,6 +19,20 @@ public class Comparators {
             	return -1;
             } else {
             	return 1;
+            }
+        }
+    };
+    public static Comparator<RouteNode> CONGESTION_COMPARATOR = new Comparator<RouteNode>() {
+        @Override
+        public int compare(RouteNode node1, RouteNode node2) {
+            // The node with the largest overUse() is `the smallest
+            if(node1.overUse() == node2.overUse()) {
+                return node1.compareTo(node2);
+            }
+            else if(node1.overUse() > node2.overUse()) {
+                return -1;
+            } else {
+                return 1;
             }
         }
     };

@@ -1,5 +1,11 @@
 package route.route;
 
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.LinkedList;
+import java.util.Queue;
+import java.util.SortedSet;
+
 import route.circuit.resource.RouteNode;
 
 // It's a class because Java has no structs
@@ -92,5 +98,65 @@ class BoundingBoxRange extends Box {
 		this.y_min += bbRange.y_min;
 		this.y_max += bbRange.y_max;
 		return this;
+	}
+}
+
+class CongestedZone extends BoundingBox {
+	public CongestedZone(RouteNode center) {
+		super(center.xlow, center.xhigh, center.ylow, center.yhigh);
+	}
+
+	// TODO: revise this function
+	public static CongestedZone findCongestionZone(RouteNode congestionCenter, SortedSet<RouteNode> congestedRouteNodes) {
+		// TODO: check if this is the best way to access all neighbours (because of the difference between parents and children)
+		Queue<RouteNode> q = new LinkedList<>();
+		final Collection<RouteNodeData> nodesTouched = new ArrayList<>();
+
+		// initial node
+		addNodeToQueue(congestionCenter, nodesTouched, q);
+		CongestedZone zone = new CongestedZone(congestionCenter);
+
+//		for (int i = 0; i < 5; i++) { // i is the MAX range for this zone
+//			for nodes in {
+//				congestedRouteNodes.remove(o);
+//				//
+//			}
+//		}
+		// BFS
+		int i = 0;
+		while (!q.isEmpty() && i<10) { // just try 10 nodes
+			RouteNode node = q.remove();
+			congestedRouteNodes.remove(node); // also remove from the set
+			// process
+			zone.expand(node);
+			// continue search
+			for (RouteNode child : node.children) {
+				// if not yet used AND is congested
+				addNodeToQueue(child, nodesTouched, q);
+			}
+			i++;
+		}
+		// Clean up
+		resetPathCost(nodesTouched);
+		if (i > 2) {
+			return zone;
+		} else {
+			return null;
+		}
+	}
+
+	private static void resetPathCost(Collection<RouteNodeData> nodesTouched) {
+		for (RouteNodeData node : nodesTouched) {
+			node.touched = false;
+		}
+		nodesTouched.clear();
+	}
+	private static void addNodeToQueue(RouteNode node, Collection<RouteNodeData> nodesTouched, Queue<RouteNode> q) {
+		RouteNodeData data = node.routeNodeData;
+		if (!data.touched && node.overUsed()) {
+			nodesTouched.add(data);
+			data.touched = true;
+			q.add(node);
+		}
 	}
 }

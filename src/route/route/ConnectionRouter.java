@@ -7,6 +7,8 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.PriorityQueue;
 import java.util.Set;
+import java.util.SortedSet;
+import java.util.TreeSet;
 
 import route.circuit.Circuit;
 import route.circuit.resource.Opin;
@@ -51,7 +53,7 @@ public class ConnectionRouter {
 	private RouteTimers routeTimers;
 	
 	public static enum CongestionLookAheadMethod {NONE, GROW_WHEN_CONGESTED, CLOSE_TO_BORDER, HOTSPOT_DETECTION}; // Different modes of congestion lookahead
-	public static final CongestionLookAheadMethod CONGESTION_LOOK_AHEAD_METHOD = CongestionLookAheadMethod.NONE;
+	public static final CongestionLookAheadMethod CONGESTION_LOOK_AHEAD_METHOD = CongestionLookAheadMethod.HOTSPOT_DETECTION;
 	public static final boolean DEBUG = true;
 	
 	public ConnectionRouter(ResourceGraph rrg, Circuit circuit) {
@@ -318,9 +320,36 @@ public class ConnectionRouter {
 			// Congestion detection - cluster analysis
 			int connectionBoxesUpdated = 0;
 			this.routeTimers.congestionLookahead.start();
+
 			if (CONGESTION_LOOK_AHEAD_METHOD == CongestionLookAheadMethod.HOTSPOT_DETECTION) {
 				//do congestion detection here
 				//this is meant for techniques working on the whole rrg.
+
+				// We want a structure with least time complexity for: remove(), last() (OR first(), depends on comparator) and initialization
+				// We have 2 approaches:
+				SortedSet<RouteNode> congestedRouteNodes = new TreeSet<RouteNode>(Comparators.CONGESTION_COMPARATOR);
+				//SortedSet<RouteNode> congestedRouteNodes = new PriorityRouteNodeSet(Comparators.CONGESTION_COMPARATOR);
+				// insert overused nodes
+				for (RouteNode node: this.rrg.getRouteNodes()) {
+					if (node.overUsed()) {
+						congestedRouteNodes.add(node);
+					}
+				}
+				List<CongestedZone> clusters = new ArrayList<CongestedZone>();
+				RouteNode congestionCenter = null;
+				while (! congestedRouteNodes.isEmpty()) {
+					if (congestionCenter == congestedRouteNodes.first()) {
+						System.out.println("Loop!");
+					}
+					congestionCenter = congestedRouteNodes.first();
+					CongestedZone z = CongestedZone.findCongestionZone(congestionCenter, congestedRouteNodes); // modify in place
+					// add zone to list if not null
+					if (z != null) {
+						clusters.add(z);
+					}
+				}
+				// List of congested zones
+				System.out.printf("Amount of clusters: %d\n", clusters.size());
 			}
 			// Apply congestion lookahead information on the boundingBox
 			for(Connection con : sortedListOfConnections) {
@@ -857,3 +886,50 @@ public class ConnectionRouter {
 		}
 	}
 }
+
+// Only implements the important (for us) methods
+//@SuppressWarnings("serial")
+//class PriorityRouteNodeSet extends PriorityQueue<RouteNode> implements SortedSet<RouteNode> {
+//
+//	@Override
+//	public boolean remove(Object o) {
+//		// Get better timing behavior by just marking the RouteNode as removed
+//		RouteNode n = (RouteNode) o;
+//		boolean isRemoved = n.used;
+//		n.used = true;
+//		return isRemoved;
+//	}
+//
+//	@Override
+//	public SortedSet<RouteNode> subSet(RouteNode fromElement, RouteNode toElement) {
+//		// TODO Auto-generated method stub
+//		return null;
+//	}
+//
+//	@Override
+//	public SortedSet<RouteNode> headSet(RouteNode toElement) {
+//		// TODO Auto-generated method stub
+//		return null;
+//	}
+//
+//	@Override
+//	public SortedSet<RouteNode> tailSet(RouteNode fromElement) {
+//		// TODO Auto-generated method stub
+//		return null;
+//	}
+//
+//	@Override
+//	public RouteNode first() {
+//		// If this element is already visited, then skip + remove it
+//		while (this.peek().used) {
+//			this.poll();
+//		}
+//		return this.peek();
+//	}
+//
+//	@Override
+//	public RouteNode last() {
+//		// TODO Auto-generated method stub
+//		return null;
+//	}
+//}
