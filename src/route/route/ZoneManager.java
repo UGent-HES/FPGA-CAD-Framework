@@ -40,6 +40,7 @@ public class ZoneManager {
 				for (int i=coords[0][0];i<=coords[1][0];i++) {
 					for (int j=coords[0][1];j<=coords[1][1];j++) {
 						zonecongestion[i][j]+=node.overUse();
+						//zonecongestion[i][j]+=1;
 					}
 				}
 			}
@@ -66,12 +67,18 @@ public class ZoneManager {
 	public void Normalize() {
 		int max = 0;
 		for(int i=0;i<this.width;i++) {
-			for(int j=0;j<this.width;j++) {
+			for(int j=0;j<this.height;j++) {
 				max = Math.max(max, zonecongestion[i][j]);
 			}
 		}
+		
+		if(max == 0) {
+			normalizedzonecongestion = new float[this.width][this.height];
+			return;
+		}
+		
 		for(int i=0;i<this.width;i++) {
-			for(int j=0;j<this.width;j++) {
+			for(int j=0;j<this.height;j++) {
 				normalizedzonecongestion[i][j] = zonecongestion[i][j]/(float)max;
 			}
 		}
