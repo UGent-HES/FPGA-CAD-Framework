@@ -25,7 +25,7 @@ public class ConnectionRouter {
 	private final float acc_fac = 1;		// set how much more overuse contributes to acc cost each iteration
 	private float alphaWLD = 1.4f; 			// weight factor for 	wire length delay 	in cost calculation
 	private float alphaTD = 0.7f;			// weight factor for 	timing delay 		in cost calculation
-	private float alphaC = (float)1e-11;	// weight factor for 	congestion			in cost calculation
+	private float alphaC = 0.05f;	// weight factor for 	congestion			in cost calculation
 	
 	private ZoneManager zoneManager;
 	
@@ -332,13 +332,14 @@ public class ConnectionRouter {
 			
 			// Apply congestion lookahead information on the boundingBox
 			for(Connection con : sortedListOfConnections) {
+				zoneManager.AddCongestionData(con);
 				switch (CONGESTION_LOOK_AHEAD_METHOD) {
 				case NONE:
 					break;
 				case GROW_WHEN_CONGESTED:
 					// METHOD: enlarge when congested
 					if (con.congested()) { // TODO: put before switch (?)
-						con.expandBoundingBoxRange(1);
+						con.expandBoundingBoxRange(2);
 						
 					}
 					break;
@@ -347,7 +348,7 @@ public class ConnectionRouter {
 					// TODO: reference VPR properly for this part of their code (this part should be MIT)
 					if (con.dynamicUpdateBoundingBox(DYNAMIC_BB_DELTA_THRESHOLD)) {
 						connectionBoxesUpdated++;
-						zoneManager.AddCongestionData(con);
+						
 					} // (see also https://github.com/verilog-to-routing/vtr-verilog-to-routing/blob/08f054c85e22ddf33811d91b2dd45daf5ee2341e/vpr/src/route/route_timing.cpp#L1849)
 					break;
 				case HOTSPOT_DETECTION:
@@ -650,7 +651,9 @@ public class ConnectionRouter {
 		if(queueHead == null){
 			System.out.println("queue is empty");			
 			return false;
-		} else {
+		} 
+		
+		else {
 			return queueHead.target;
 		}
 	}
@@ -738,7 +741,7 @@ public class ConnectionRouter {
 			
 			new_lower_bound_total_path_cost += this.alphaWLD * (1 - con.getCriticality()) * expected_wire_cost; //add wire length 	contribution to cost
 			new_lower_bound_total_path_cost += this.alphaTD * con.getCriticality() * expected_timing_cost;		//add timing 		contribution to cost
-			new_lower_bound_total_path_cost += this.alphaC * expected_congestion_cost; 							//add congestion 	contribution to cost
+			new_lower_bound_total_path_cost *= 1 + this.alphaC * expected_congestion_cost; 							//add congestion 	contribution to cost
 		
 		}
 		
