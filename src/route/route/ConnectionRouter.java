@@ -320,6 +320,17 @@ public class ConnectionRouter {
 			// Congestion detection - cluster analysis
 			int connectionBoxesUpdated = 0;
 			this.routeTimers.congestionLookahead.start();
+			
+			for (RouteNode a : this.rrg.getRouteNodes()) {
+			    if (a.index == 2465835) {
+			        for (RouteNode b : this.rrg.getRouteNodes()) {
+			            if (b.index == 2805914) {
+			                System.out.println(Comparators.CONGESTION_COMPARATOR.compare(b, a));
+			                System.out.println(Comparators.CONGESTION_COMPARATOR.compare(a, b));
+			            }
+			        }
+			    }
+			}
 
 			if (CONGESTION_LOOK_AHEAD_METHOD == CongestionLookAheadMethod.HOTSPOT_DETECTION) {
 				//do congestion detection here
@@ -332,7 +343,15 @@ public class ConnectionRouter {
 				// insert overused nodes
 				for (RouteNode node: this.rrg.getRouteNodes()) {
 					if (node.overUsed()) {
+					    if (node.index == 2465835 || node.index == 2805914) {
+					        System.out.println("buggy node");
+					        congestedRouteNodes.contains(node);
+					    }
 						congestedRouteNodes.add(node);
+						if (node.index == 2465835 || node.index == 2805914) {
+                            System.out.println("buggy node");
+                            congestedRouteNodes.contains(node);
+                        }
 					}
 				}
 				List<CongestedZone> clusters = new ArrayList<CongestedZone>();

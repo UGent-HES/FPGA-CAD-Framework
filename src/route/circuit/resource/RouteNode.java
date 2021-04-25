@@ -3,7 +3,7 @@ package route.circuit.resource;
 import route.route.RouteNodeData;
 
 public abstract class RouteNode implements Comparable<RouteNode> {
-	protected final int index; // Unique index number
+	public final int index; // Unique index number
 	
 	public final short xlow, xhigh;
 	public final short ylow, yhigh;
