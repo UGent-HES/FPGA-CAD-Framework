@@ -3,7 +3,7 @@ package route.circuit.resource;
 import route.route.RouteNodeData;
 
 public abstract class RouteNode implements Comparable<RouteNode> {
-	public final int index; // Unique index number
+	protected final int index; // Unique index number
 	
 	public final short xlow, xhigh;
 	public final short ylow, yhigh;
@@ -96,23 +96,19 @@ public abstract class RouteNode implements Comparable<RouteNode> {
 		int r = this.type.compareTo(o.type);
 		if (this == o)
 			return 0;
-		else if (r < 0)
-			return -1;
-		else if (r > 0)
-			return 1;
-		else if(this.xlow < o.xlow)
-			return -1;
-		else if (this.xhigh > o.xhigh)
-			return 1;
-		else if (this.ylow < o.ylow)
-			return -1;
-		else if (this.yhigh > o.yhigh)
-			return 1;
-		else if (this.index < o.index)
-			return -1;
+		else if (r != 0)
+			return r;
+		else if(this.xlow != o.xlow)
+			return this.xlow - o.xlow;
+		else if (this.xhigh != o.xhigh)
+			return this.xhigh - o.xhigh;
+		else if (this.ylow != o.ylow)
+			return this.ylow - o.ylow;
+		else if (this.yhigh != o.yhigh)
+			return this.yhigh - o.yhigh;
 		else if (this.index > o.index)
-			return 1;
-		else 
+			return this.index - o.index;
+		else
 			return Long.valueOf(this.hashCode()).compareTo(Long.valueOf(o.hashCode()));
 	}
 	

@@ -244,9 +244,9 @@ public class ConnectionRouter {
 		System.out.printf("%-22s | %d\n", "Max per crit con", MAX_PERCENTAGE_CRITICAL_CONNECTIONS);
 		System.out.printf("%-22s | %.1f\n", "Pres fac mult", this.pres_fac_mult);
 		
-        System.out.printf("---------------------------------------------------------------------------------------------------------------------------\n");
-        System.out.printf("%9s  %8s  %8s  %12s  %9s  %11s  %17s  %11s  %11s  %9s\n", "Iteration", "AlphaWLD", "AlphaTD", "Reroute Crit", "Time (ms)", "Conn routed", "Overused RR Nodes", "Expanded BB", "Wire-Length", "Max Delay");
-        System.out.printf("---------  --------  --------  ------------  ---------  -----------  -----------------  -----------  -----------  ---------\n");
+        System.out.printf("-------------------------------------------------------------------------------------------------------------------------------------\n");
+        System.out.printf("%9s  %8s  %8s  %12s  %9s  %11s  %17s  %11s  %8s  %11s  %9s\n", "Iteration", "AlphaWLD", "AlphaTD", "Reroute Crit", "Time (ms)", "Conn routed", "Overused RR Nodes", "Expanded BB", "Clusters", "Wire-Length", "Max Delay");
+        System.out.printf("---------  --------  --------  ------------  ---------  -----------  -----------------  -----------  --------  -----------  ---------\n");
         
         boolean validRouting;
         
@@ -319,18 +319,8 @@ public class ConnectionRouter {
 			
 			// Congestion detection - cluster analysis
 			int connectionBoxesUpdated = 0;
+			List<CongestedZone> clusters = new ArrayList<CongestedZone>();
 			this.routeTimers.congestionLookahead.start();
-			
-			for (RouteNode a : this.rrg.getRouteNodes()) {
-			    if (a.index == 2465835) {
-			        for (RouteNode b : this.rrg.getRouteNodes()) {
-			            if (b.index == 2805914) {
-			                System.out.println(Comparators.CONGESTION_COMPARATOR.compare(b, a));
-			                System.out.println(Comparators.CONGESTION_COMPARATOR.compare(a, b));
-			            }
-			        }
-			    }
-			}
 
 			if (CONGESTION_LOOK_AHEAD_METHOD == CongestionLookAheadMethod.HOTSPOT_DETECTION) {
 				//do congestion detection here
@@ -343,23 +333,11 @@ public class ConnectionRouter {
 				// insert overused nodes
 				for (RouteNode node: this.rrg.getRouteNodes()) {
 					if (node.overUsed()) {
-					    if (node.index == 2465835 || node.index == 2805914) {
-					        System.out.println("buggy node");
-					        congestedRouteNodes.contains(node);
-					    }
 						congestedRouteNodes.add(node);
-						if (node.index == 2465835 || node.index == 2805914) {
-                            System.out.println("buggy node");
-                            congestedRouteNodes.contains(node);
-                        }
 					}
 				}
-				List<CongestedZone> clusters = new ArrayList<CongestedZone>();
 				RouteNode congestionCenter = null;
 				while (! congestedRouteNodes.isEmpty()) {
-					if (congestionCenter == congestedRouteNodes.first()) {
-						System.out.println("Loop!");
-					}
 					congestionCenter = congestedRouteNodes.first();
 					CongestedZone z = CongestedZone.findCongestionZone(congestionCenter, congestedRouteNodes); // modify in place
 					// add zone to list if not null
@@ -368,7 +346,6 @@ public class ConnectionRouter {
 					}
 				}
 				// List of congested zones
-				System.out.printf("Amount of clusters: %d\n", clusters.size());
 			}
 			// Apply congestion lookahead information on the boundingBox
 			for(Connection con : sortedListOfConnections) {
@@ -413,7 +390,7 @@ public class ConnectionRouter {
 			long iterationEnd = System.nanoTime();
 			int rt = (int) Math.round((iterationEnd-iterationStart) * Math.pow(10, -6));
 			
-			System.out.printf("%9d  %8.2f  %8.2f  %12.3f  %9d  %11d  %8d  %6.2f%%  %11d  %11d  %s\n", this.itry, this.alphaWLD, this.alphaTD, REROUTE_CRITICALITY, rt, this.connectionsRoutedIteration, overUsed, overUsePercentage, connectionBoxesUpdated, wireLength, maxDelayString);
+			System.out.printf("%9d  %8.2f  %8.2f  %12.3f  %9d  %11d  %8d  %6.2f%%  %11d  %8d  %11d  %s\n", this.itry, this.alphaWLD, this.alphaTD, REROUTE_CRITICALITY, rt, this.connectionsRoutedIteration, overUsed, overUsePercentage, connectionBoxesUpdated, clusters.size(), wireLength, maxDelayString);
 
 			// Check if the routing is valid, if realizable return, the routing succeeded
 			if (validRouting) {
