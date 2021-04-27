@@ -110,6 +110,7 @@ class BoundingBox extends Box {
 }
 
 class BoundingBoxRange extends Box {
+    public static final BoundingBoxRange zeroExpansion = new BoundingBoxRange((short) 0);
 	public BoundingBoxRange() {}
 	public BoundingBoxRange(short uniformRange) {
 		this(uniformRange, uniformRange, uniformRange, uniformRange);

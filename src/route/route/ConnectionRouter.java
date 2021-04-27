@@ -373,34 +373,52 @@ public class ConnectionRouter {
 				    BoundingBox bb = con.getBB();
 				    // BB  : NORTH, EAST , SOUTH, WEST
                     // ZONE: UP   , RIGHT, DOWN , LEFT
-				    Set<CongestedZone> northy = new HashSet<>();
+				    Set<CongestedZone> yaxis = new HashSet<>(); // NORTH - SOUTH
+				    Set<CongestedZone> xaxis = new HashSet<>();
 				    // Determine useful sets
 				    for (CongestedZone z : clusters) {
 				        //  LEFT    < EAST     && RIGHT   > WEST     && DOWN    < SOUTH + margin
-				        if (z.x_min < bb.x_max && z.x_max > bb.x_min && z.y_min < bb.y_min + 2) {
-				            northy.add(z);
+				        if (z.x_min < bb.x_max && z.x_max > bb.x_min && z.y_min < bb.y_min + 2 && z.y_max > bb.y_max - 2) {
+				            yaxis.add(z);
+				        }
+				        if (z.y_min < bb.y_max && z.y_max > bb.y_min && z.x_max > bb.x_max - 2 && z.x_min < bb.x_min + 2) {
+				            xaxis.add(z);
 				        }
 				    }
-				    // NORTH
-				    int new_north = -2;
-				    for (CongestedZone z : northy) {
-				        int diff = z.y_max - bb.y_max; // 𝛥UN - difference between upper zone border and north BB border
-				        if (diff > 10) {
-				            diff = 0; // Too large for expansions, just expand normally.
-				        }
-				        new_north = Math.max(new_north, diff);
-				    }
-				    bb.y_max += new_north + 2;
 				    // ALL
-				    BoundingBoxRange bbr = new BoundingBoxRange((short) -2);
-				    for (CongestedZone z : northy) {
-                        short diff = (short) (z.y_max - bb.y_max); // 𝛥UN - difference between upper zone border and north BB border
-                        if (diff > 10) {
-                            diff = 0; // Too large for expansions, just expand normally.
+				    BoundingBoxRange bbr = new BoundingBoxRange((short) 0);
+				    // NORTH-SOUTH
+				    for (CongestedZone z : yaxis) {
+                        short diff_north = (short) (z.y_max - bb.y_max + 2); // 𝛥UN - difference between upper zone border and north BB border
+                        short diff_south = (short) (bb.y_min - z.y_min + 2);
+                        if (diff_north > 10 + 2) {
+                            diff_north = 2; // Too large for expansions, just expand normally.
                         }
-                        bbr.y_max = (short) Math.max(bbr.y_max, diff);
+                        if (diff_south > 10 + 2) {
+                            diff_south = 2;
+                        }
+                        bbr.y_max = (short) Math.max(bbr.y_max, diff_north);
+                        bbr.y_min = (short) Math.max(bbr.y_min, diff_south);
                     }
-				    bb.expand(bbr.expand((short) 2));
+				    // EAST-WEST
+				    for (CongestedZone z : xaxis) {
+                        short diff_east = (short) (bb.x_min - z.x_min + 2); // 𝛥UN - difference between upper zone border and north BB border
+                        short diff_west = (short) (z.x_max - bb.x_max + 2);
+                        if (diff_east > 10 + 2) {
+                            diff_east = 2; // Too large for expansions, just expand normally.
+                        }
+                        if (diff_west > 10 + 2) {
+                            diff_west = 2;
+                        }
+                        bbr.x_min = (short) Math.max(bbr.x_min, diff_east);
+                        bbr.x_max = (short) Math.max(bbr.x_max, diff_west);
+                    }
+				    // ALL
+				    if (!bbr.equals(BoundingBoxRange.zeroExpansion)) {
+				        // If BBrange is different from the zero expansion
+				        connectionBoxesUpdated++;
+				    }
+				    bb.expand(bbr);
 					break;
 				}
 			}
