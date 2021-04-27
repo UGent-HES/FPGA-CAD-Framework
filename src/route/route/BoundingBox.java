@@ -11,7 +11,7 @@ import route.circuit.resource.RouteNode;
 // It's a class because Java has no structs
 // Purpose: group simple named values together (seperated into 'BoundingBox' and a 'BoundingBoxRange', for static analysis)
 
-abstract class Box {
+abstract class Box implements Comparable<Box> {
 	public short x_min;
 	public short x_max;
 	public short y_min;
@@ -25,6 +25,30 @@ abstract class Box {
 	// bbRange : 	each integer represents how much the bounding box expands at that side.
 	// 				Negative integers represent shrinking.
 	public abstract Box expand(BoundingBoxRange bbRange);
+	
+	@Override
+	public int compareTo(Box o) {
+	    // arbitrary comparator, but consistent with a.compareTo(b) == - b.compareTo(a) and only equals when same object (same parameters)
+        if (!(o.getClass() == this.getClass())) throw new ClassCastException();
+        if (this.equals(o)) return 0; // For this case, equal boxes
+	    if (x_min != o.x_min) {
+	        return x_min - o.x_min;
+	    }
+	    if (x_max != o.x_max) {
+            return x_max - o.x_max;
+        }
+	    if (y_min != o.y_min) {
+            return y_min - o.y_min;
+        }
+	    if (y_max != o.y_max) {
+            return y_max - o.y_max;
+        }
+	    else return this.hashCode() - o.hashCode(); // Should never be called...
+	}
+	
+	public boolean equals(Box o) {
+	    return x_min == o.x_min && x_max == o.x_max && y_min == o.y_min && y_max == o.y_max;
+	}
 }
 
 class BoundingBox extends Box {
@@ -60,6 +84,14 @@ class BoundingBox extends Box {
 		y_max = (short) Math.max(y_max, rn.ylow);
 		return this;
 	}
+	public BoundingBox expand(CongestedZone zone) {
+	    // Route around congested zones
+	    x_min = (short) Math.min(x_min, zone.x_max);
+        y_min = (short) Math.min(y_min, zone.y_max);
+        x_max = (short) Math.max(x_max, zone.x_min);
+        y_max = (short) Math.max(y_max, zone.y_min);
+	    return this;
+	}
 	
 	public BoundingBox add(BoundingBoxRange bbRange) {
 		BoundingBox bb = new BoundingBox(this);
@@ -92,13 +124,23 @@ class BoundingBoxRange extends Box {
 	public BoundingBoxRange(BoundingBoxRange original) {
 		this(original.x_min, original.x_max, original.y_min, original.y_max);
 	}
-	public BoundingBoxRange expand(BoundingBoxRange bbRange) {
-		this.x_min += bbRange.x_min;
-		this.x_max += bbRange.x_max;
-		this.y_min += bbRange.y_min;
-		this.y_max += bbRange.y_max;
-		return this;
+	public BoundingBoxRange expand(short uniformRange) {
+	    return this.expand(uniformRange, uniformRange, uniformRange, uniformRange);
 	}
+	public BoundingBoxRange expand(BoundingBoxRange bbRange) {
+//		this.x_min += bbRange.x_min;
+//		this.x_max += bbRange.x_max;
+//		this.y_min += bbRange.y_min;
+//		this.y_max += bbRange.y_max;
+		return this.expand(bbRange.x_min, bbRange.x_max, bbRange.y_min, bbRange.y_max);
+	}
+	public BoundingBoxRange expand(short x_min, short x_max,short y_min,short y_max) {
+        this.x_min += x_min;
+        this.x_max += x_max;
+        this.y_min += y_min;
+        this.y_max += y_max;
+        return this;
+    }
 }
 
 class CongestedZone extends BoundingBox {

@@ -109,7 +109,7 @@ public abstract class RouteNode implements Comparable<RouteNode> {
 		else if (this.index > o.index)
 			return this.index - o.index;
 		else
-			return Long.valueOf(this.hashCode()).compareTo(Long.valueOf(o.hashCode()));
+			return this.hashCode() - o.hashCode();
 	}
 	
 	@Override

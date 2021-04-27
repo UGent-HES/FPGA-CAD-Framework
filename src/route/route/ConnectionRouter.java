@@ -54,6 +54,8 @@ public class ConnectionRouter {
 	
 	public static enum CongestionLookAheadMethod {NONE, GROW_WHEN_CONGESTED, CLOSE_TO_BORDER, HOTSPOT_DETECTION}; // Different modes of congestion lookahead
 	public static final CongestionLookAheadMethod CONGESTION_LOOK_AHEAD_METHOD = CongestionLookAheadMethod.HOTSPOT_DETECTION;
+	public static final int ROUTE_AROUND = 2; // TODO
+	public static final int MAX_EXPANSION = 10; // TODO
 	public static final boolean DEBUG = true;
 	
 	public ConnectionRouter(ResourceGraph rrg, Circuit circuit) {
@@ -367,7 +369,38 @@ public class ConnectionRouter {
 					break;
 				case HOTSPOT_DETECTION:
 					// METHOD: enlarge when hotspot is threatening
-					//BB resize based on shape of hotspots
+					// BB resize based on shape of hotspots
+				    BoundingBox bb = con.getBB();
+				    // BB  : NORTH, EAST , SOUTH, WEST
+                    // ZONE: UP   , RIGHT, DOWN , LEFT
+				    Set<CongestedZone> northy = new HashSet<>();
+				    // Determine useful sets
+				    for (CongestedZone z : clusters) {
+				        //  LEFT    < EAST     && RIGHT   > WEST     && DOWN    < SOUTH + margin
+				        if (z.x_min < bb.x_max && z.x_max > bb.x_min && z.y_min < bb.y_min + 2) {
+				            northy.add(z);
+				        }
+				    }
+				    // NORTH
+				    int new_north = -2;
+				    for (CongestedZone z : northy) {
+				        int diff = z.y_max - bb.y_max; // 𝛥UN - difference between upper zone border and north BB border
+				        if (diff > 10) {
+				            diff = 0; // Too large for expansions, just expand normally.
+				        }
+				        new_north = Math.max(new_north, diff);
+				    }
+				    bb.y_max += new_north + 2;
+				    // ALL
+				    BoundingBoxRange bbr = new BoundingBoxRange((short) -2);
+				    for (CongestedZone z : northy) {
+                        short diff = (short) (z.y_max - bb.y_max); // 𝛥UN - difference between upper zone border and north BB border
+                        if (diff > 10) {
+                            diff = 0; // Too large for expansions, just expand normally.
+                        }
+                        bbr.y_max = (short) Math.max(bbr.y_max, diff);
+                    }
+				    bb.expand(bbr.expand((short) 2));
 					break;
 				}
 			}

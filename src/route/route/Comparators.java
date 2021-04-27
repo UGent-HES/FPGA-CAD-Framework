@@ -36,6 +36,53 @@ public class Comparators {
             }
         }
     };
+    public static Comparator<BoundingBox> X_AXIS_COMPARATOR = new Comparator<BoundingBox>() {
+        @Override
+        public int compare(BoundingBox b1, BoundingBox b2) {
+            if (b1.x_max < b2.x_min) {
+                return -1; // b1 completely left from b2
+            } else if (b1.x_min > b2.x_max) {
+                return  1; // b1 completely right from b2
+            } else if (b1.x_min < b2.x_min && b1.x_max < b2.x_max) {
+                return -1;// b1 overlap left
+            } else if (b1.x_min > b2.x_min && b1.x_max > b2.x_max) {
+                return  1; // b2 overlap right
+            } else if (b1.x_min < b2.x_min && b1.x_max > b2.x_max) {
+                return -1; // b1 completely over b2
+            } else if (b1.x_min > b2.x_min && b1.x_max < b2.x_max) {
+                return  1; // b1 completely inside b2
+            }
+            else // equal with respect to x-axis
+                return b1.compareTo(b2);
+        }
+    };
+    public static Comparator<BoundingBox> LEFT_COMPARATOR = new Comparator<BoundingBox>() {
+        @Override
+        public int compare(BoundingBox b1, BoundingBox b2) {
+            if (b1.x_min == b2.x_min) {
+                return b1.compareTo(b2);
+            }
+            else if (b1.x_min < b2.x_min) {
+                return -1;
+            }
+            else {
+                return 1;
+            }
+        }
+    };
+    public static Comparator<BoundingBox> Y_AXIS_COMPARATOR = new Comparator<BoundingBox>() {
+        @Override
+        public int compare(BoundingBox b1, BoundingBox b2) {
+            if (b1.y_max < b2.y_min) {
+                return -1; // b1 completely under b2
+            }
+            else if (b1.y_min > b2.y_max) {
+                return 1; // b1 completely above b2
+            }
+            else
+                return b1.compareTo(b2);
+        }
+    };
     
     public static Comparator<Connection>  FanoutConnection = new Comparator<Connection>() {
     	@Override
