@@ -3,6 +3,7 @@ package route.route;
 import java.util.ArrayList;
 import java.util.List;
 
+import route.circuit.Circuit;
 import route.circuit.pin.GlobalPin;
 import route.circuit.resource.Opin;
 import route.circuit.resource.RouteNode;
@@ -23,18 +24,12 @@ public class Connection implements Comparable<Connection>  {
 
     public Net net;
     
-    // boundingBoxRange is used f
-    public int boundingBoxRange;
-    //boundingBox is used for sorting Connections
-    public int boundingBox;
-    public short x_min;
-	public short x_max;
-	public short y_min;
-	public short y_max;
-    public short x_min_b;
-	public short x_max_b;
-	public short y_min_b;
-	public short y_max_b;
+	// connectionBoxSize is used for sorting Connections, not adjusted at runtime
+	public int connectionBoxSize;
+	public BoundingBox cb; // connectionBox - contains 4 sides separately.
+	//public BoundingBox bb; - not used to prevent consistency problems, we compute it on the fly // boundingBox
+	// boundingBoxRange is used for routing, adjusted at runtime
+	public BoundingBoxRange bbRange; // ranges for 4 sides, will be adjusted & can be negative
 	
 	public final String netName;
 	
@@ -46,7 +41,7 @@ public class Connection implements Comparable<Connection>  {
 	public Connection(int id, GlobalPin source, GlobalPin sink) {
 		this.id = id;
 
-		//Source
+		// Source
 		this.source = source;
 		String sourceName = null;
 		if(this.source.getPortType().isEquivalent()) {
@@ -58,7 +53,7 @@ public class Connection implements Comparable<Connection>  {
 		if(!source.hasTimingNode()) System.err.println(source + " => " + sink + " | Source " + source + " has no timing node");
 		this.sourceTimingNode = this.source.getTimingNode();
 		
-		//Sink
+		// Sink
 		this.sink = sink;
 		String sinkName = null;
 		if(this.sink.getPortType().isEquivalent()) {
@@ -70,7 +65,7 @@ public class Connection implements Comparable<Connection>  {
 		if(!sink.hasTimingNode()) System.out.println(source + " => " + sink + " | Sink " + sink + " has no timing node");
 		this.sinkTimingNode = this.sink.getTimingNode();
 		
-		//Timing edge of the connection
+		// Timing edge of the connection
 		if(this.sinkTimingNode.getSourceEdges().size() != 1) {
 			System.err.println("The connection should have only one edge => " + this.sinkTimingNode.getSourceEdges().size());
 		}
@@ -79,52 +74,88 @@ public class Connection implements Comparable<Connection>  {
 		}
 		this.timingEdge = this.sinkTimingNode.getSourceEdge(0);
 		
-		//Bounding box		
+		// Bounding box
 		short sourceX = (short) this.source.getOwner().getColumn();
 		short sinkX = (short) this.sink.getOwner().getColumn();
+		this.cb = new BoundingBox();
 		if(sourceX < sinkX) {
-			x_min = sourceX;
-			x_max = sinkX;
+			cb.x_min = sourceX;
+			cb.x_max = sinkX;
 		} else {
-			x_min = sinkX;
-			x_max = sourceX;
+			cb.x_min = sinkX;
+			cb.x_max = sourceX;
 		}
 		
 		short sourceY = (short) this.source.getOwner().getRow();
 		short sinkY = (short) this.sink.getOwner().getRow();
 		if(sourceY < sinkY) {
-			y_min = sourceY;
-			y_max = sinkY;
+			cb.y_min = sourceY;
+			cb.y_max = sinkY;
 		} else {
-			y_min = sinkY;
-			y_max = sourceY;
+			cb.y_min = sinkY;
+			cb.y_max = sourceY;
 		}
 		
-		this.boundingBox =(x_max - x_min + 1) + (y_max - y_min + 1);this.calculateBoundingBox(0);
+		this.connectionBoxSize = (cb.x_max - cb.x_min + 1) + (cb.y_max - cb.y_min + 1);
+		// empty initialization, is overwritten at net init
+		// If you want to initialize the bounding box range to 0:
+		//this.bbRange = new BoundingBoxRange((short) 0);
 		
-		//Route nodes
+		// Route nodes
 		this.routeNodes = new ArrayList<>();
 		
-		//Net name
+		// Net name
 		this.netName = this.source.getNetName();
 		
 		this.net = null;
 	}
 	
-	private void calculateBoundingBox(int range) {		
-		this.boundingBoxRange = range;
-		this.x_max_b = (short) (x_max + this.boundingBoxRange);
-		this.x_min_b = (short) (x_min - this.boundingBoxRange);
-		this.y_max_b = (short) (y_max + this.boundingBoxRange);
-		this.y_min_b = (short) (y_min - this.boundingBoxRange);
+	public void expandBoundingBoxRange(int uniformRange) {
+		this.bbRange.expand(uniformRange);
+	}
+
+	// Returns the bounding box of a connection's used routing resources
+	public BoundingBox calculateUsedBoundingBox() {
+	    BoundingBox bb = new BoundingBox(Short.MAX_VALUE, (short) 0, Short.MAX_VALUE, (short) 0);
+	    
+	    for(RouteNode rn : this.routeNodes){
+	    	bb.expand(rn); // expand to encompass rn
+		}
+	    return bb;
+	}
+	
+	public boolean dynamicUpdateBoundingBox(short dynamicBBDeltaThreshold) {
+		boolean updatedBB = false;
+		BoundingBox bb = getBB();
+		BoundingBox usedBB = this.calculateUsedBoundingBox();
+		BoundingBoxRange delta = bb.delta(usedBB);
+		
+		if (delta.x_min <= dynamicBBDeltaThreshold && bb.x_min > 0) {
+			this.bbRange.x_min++; // we increase the range, thus decreasing the BB
+            updatedBB = true;
+        }
+		if (delta.y_min <= dynamicBBDeltaThreshold && bb.y_min > 0) {
+			this.bbRange.y_min++;
+            updatedBB = true;
+        }
+        if (delta.x_max <= dynamicBBDeltaThreshold && bb.x_max < Circuit.maxWidth - 1) {
+            this.bbRange.x_max++;
+            updatedBB = true;
+        }
+        if (delta.y_max <= dynamicBBDeltaThreshold && bb.y_max < Circuit.maxHeight - 1) {
+            this.bbRange.y_max++;
+            updatedBB = true;
+        }
+		
+		return updatedBB;
 	}
 	
 	public void setNet(Net net) {
 		this.net = net;
 	}
 		
-	public void SetBoundingBoxRange(int range) {
-		calculateBoundingBox(range);
+	public void setBoundingBoxRange(BoundingBoxRange bbRange) {
+		this.bbRange = bbRange;
 	}
 
 	public boolean isInNetBoundingBoxLimit(RouteNode node) {
@@ -132,8 +163,8 @@ public class Connection implements Comparable<Connection>  {
 	}
 	
 	public boolean isInConBoundingBoxLimit(RouteNode node) {
-		return node.xlow < this.x_max_b && node.xhigh > this.x_min_b && node.ylow < this.y_max_b && node.yhigh > this.y_min_b;
-
+		BoundingBox bb = getBB();
+		return node.xlow < bb.x_max && node.xhigh > bb.x_min && node.ylow < bb.y_max && node.yhigh > bb.y_min;
 	}
 	
 	public void addRouteNode(RouteNode routeNode) {
@@ -210,6 +241,9 @@ public class Connection implements Comparable<Connection>  {
 		return false;
 	}
 	
+	public BoundingBox getBB() {
+		return cb.add(bbRange);
+	}
 	public Opin getOpin() {
 		if(this.routeNodes.isEmpty()) {
 			return null;
