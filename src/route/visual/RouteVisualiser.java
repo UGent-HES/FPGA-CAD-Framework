@@ -31,6 +31,9 @@ public class RouteVisualiser {
     private boolean enabled = false;
     private Circuit circuit;
 
+    private int currentRouting;
+    private List<Routing> routings = new ArrayList<Routing>();
+    
     public RouteVisualiser(Logger logger) {
         this.logger = logger;
     }
@@ -39,6 +42,14 @@ public class RouteVisualiser {
         this.enabled = true;
         this.circuit = circuit;
     }
+    
+    public void addRouting(String name) {
+    	if (this.enabled) {
+    		this.routings.add(new Routing(name, this.circuit));
+    	}
+    }
+    
+    //public void with Map<GlobalBlock>
 
     public void createAndDrawGUI() {
         if(!this.enabled) {
