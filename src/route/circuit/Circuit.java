@@ -199,7 +199,7 @@ public class Circuit {
      * CONNECTIONS *
      ***************/
     public void loadNetsAndConnections() {
-    	short boundingBoxRange = 4;
+    	short boundingBoxRange = 2;
     	
     	this.connections = new ArrayList<>();
     	this.nets = new ArrayList<>();

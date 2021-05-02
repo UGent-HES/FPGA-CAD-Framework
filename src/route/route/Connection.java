@@ -75,25 +75,39 @@ public class Connection implements Comparable<Connection>  {
 		this.timingEdge = this.sinkTimingNode.getSourceEdge(0);
 		
 		// Bounding box
-		short sourceX = (short) this.source.getOwner().getColumn();
-		short sinkX = (short) this.sink.getOwner().getColumn();
+		short sourceXlow = this.sourceRouteNode.xlow;
+		short sourceXhigh = this.sourceRouteNode.xhigh;
+		short sinkXlow = this.sinkRouteNode.xlow;
+		short sinkXhigh = this.sinkRouteNode.xhigh;
 		this.cb = new BoundingBox();
-		if(sourceX < sinkX) {
-			cb.x_min = sourceX;
-			cb.x_max = sinkX;
+		
+		if(sourceXlow < sinkXlow) {
+			cb.x_min = sourceXlow;
 		} else {
-			cb.x_min = sinkX;
-			cb.x_max = sourceX;
+			cb.x_min = sinkXlow;
 		}
 		
-		short sourceY = (short) this.source.getOwner().getRow();
-		short sinkY = (short) this.sink.getOwner().getRow();
-		if(sourceY < sinkY) {
-			cb.y_min = sourceY;
-			cb.y_max = sinkY;
+		if(sourceXhigh > sinkXhigh) {
+			cb.x_max = sourceXhigh;
 		} else {
-			cb.y_min = sinkY;
-			cb.y_max = sourceY;
+			cb.x_max = sinkXhigh;
+		}
+		
+		short sourceYlow = this.sourceRouteNode.ylow;
+		short sourceYhigh = this.sourceRouteNode.yhigh;
+		short sinkYlow = this.sinkRouteNode.ylow;
+		short sinkYhigh = this.sinkRouteNode.yhigh;
+		
+		if(sourceYlow < sinkYlow) {
+			cb.y_min = sourceYlow;
+		} else {
+			cb.y_min = sinkYlow;
+		}
+		
+		if(sourceYhigh > sinkYhigh) {
+			cb.y_max = sourceYhigh;
+		} else {
+			cb.y_max = sinkYhigh;
 		}
 		
 		this.connectionBoxSize = (cb.x_max - cb.x_min + 1) + (cb.y_max - cb.y_min + 1);
