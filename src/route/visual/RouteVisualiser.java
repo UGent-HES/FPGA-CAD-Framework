@@ -53,10 +53,55 @@ public class RouteVisualiser {
 
     public void createAndDrawGUI() {
         if(!this.enabled) {
-        	logger.print("The visualiser is disabled");
             return;
         }
-        logger.print("The visualiser is enabled");
+        
+        this.addRouting("Final routing");
+        
+        this.frame = new JFrame("Routing visualiser");
+        this.frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+        
+        this.frame.setSize(500, 450);
+        Dimension screen = Toolkit.getDefaultToolkit().getScreenSize();
+        this.frame.setLocation(
+        		(int) (screen.getWidth() - this.frame.getWidth()) / 2,
+        		(int) (screen.getHeight() - this.frame.getHeight()) / 2);
+        
+        this.frame.setExtendedState(this.frame.getExtendedState() | Frame.MAXIMIZED_BOTH);
+        this.frame.setVisible(true);
+        
+        Container pane = this.frame.getContentPane();
+        
+        JPanel navigationPanel = new JPanel();
+        pane.add(navigationPanel, BorderLayout.PAGE_START);
+        
+        JPanel titlePanel = new JPanel();
+        JPanel buttonPanel = new JPanel();
+        
+        navigationPanel.setLayout(new BoxLayout(navigationPanel, BoxLayout.Y_AXIS));
+        navigationPanel.add(titlePanel, BorderLayout.CENTER);
+        navigationPanel.add(buttonPanel, BorderLayout.CENTER);
+        
+        this.placementLabel = new JLabel("");
+        titlePanel.add(this.placementLabel, BorderLayout.CENTER);
+        
+        /*	fast backward button?
+        for (Routing routing : this.routings) {
+        	
+        }
+        */
+        JButton previousGradientButton = new JButton("<");
+        //previousGradientButton.addActionListener(new NavigateActionListener(this, -1));
+        
         //do the drawing
+        
+        
+        
+        
     }
 }
+
+
+
+
+
