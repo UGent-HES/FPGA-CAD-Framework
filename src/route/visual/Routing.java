@@ -9,27 +9,29 @@ import route.circuit.block.GlobalBlock;
 
 class Routing {
 	
-	private String name;
+	private String name; //really needed?
+	private int iteration;
 	private Circuit circuit;
 	private int numBlocks;
 	
-	Routing(String name, Circuit circuit) {
-		this.initialiseData(name, circuit);
+	Routing(int iteration, Circuit circuit) {
+		this.initialiseData(iteration, circuit);
 		
 		//do some stuff
 	}
 	
 	//some other constructors
 	
-	private void initialiseData(String name, Circuit circuit) {
-		this.name = circuit.getName() + " | " + name;
+	private void initialiseData(int iteration, Circuit circuit) {
+		this.name = circuit.getName();
+		this.iteration = iteration;
 		this.circuit = circuit;
 		//numblocks?
 		//blocks?
 	}
 	
-	public String getName() {
-		return this.name;
+	public int getIteration() {
+		return this.iteration;
 	}
 	
 	//get numblocks?
