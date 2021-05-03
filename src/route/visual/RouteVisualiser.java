@@ -26,7 +26,7 @@ public class RouteVisualiser {
     private Logger logger;
 
     private JFrame frame;
-    private JLabel placementLabel;
+    private JLabel routingLabel;
 
     private boolean enabled = false;
     private Circuit circuit;
@@ -82,8 +82,8 @@ public class RouteVisualiser {
         navigationPanel.add(titlePanel, BorderLayout.CENTER);
         navigationPanel.add(buttonPanel, BorderLayout.CENTER);
         
-        this.placementLabel = new JLabel("");
-        titlePanel.add(this.placementLabel, BorderLayout.CENTER);
+        this.routingLabel = new JLabel("");
+        titlePanel.add(this.routingLabel, BorderLayout.CENTER);
         
         /*	fast backward button?
         for (Routing routing : this.routings) {
@@ -98,6 +98,63 @@ public class RouteVisualiser {
         
         
         
+    }
+    
+    void drawMouseInfo(boolean mouseEnabled) {
+    	this.routingPanel.setMouseEnabled(mouseEnabled);
+    	this.drawRouting(this.currentRouting);
+    }
+    
+    void drawPlot(boolean plotEnabled) {
+    	this.routingPanel.setPlotEnabled(plotEnabled); //plotEnabled, this.bbCost);
+    	this.drawRouting(this.currentRouting);
+    }
+    
+    private class MouseActionListener implements ActionListener {
+    	private RouteVisualiser visualiser;
+    	private boolean mouseEnabled;
+    	
+    	MouseActionListener(RouteVisualiser visualiser) {
+    		this.visualiser = visualiser;
+    		this.mouseEnabled = false;
+    	}
+    	
+    	@Override
+    	public void actionPerformed(ActionEvent e) {
+    		this.mouseEnabled = !this.mouseEnabled;
+    		this.visualiser.drawMouseInfo(this.mouseEnabled);
+    	}    	
+    }
+    
+    private class PlotActionListener implements ActionListener {
+    	private RouteVisualiser visualiser;
+    	private boolean plotEnabled;
+    	
+    	PlotActionListener(RouteVisualiser visualiser) {
+    		this.visualiser = visualiser;
+    		this.plotEnabled = false;
+    	}
+    	
+    	@Override
+    	public void actionPerformed(ActionEvent e) {
+    		this.plotEnabled = !this.plotEnabled;
+    		this.visualiser.drawPlot(this.plotEnabled);
+    	}
+    }
+    
+    private class NavigateActionListener implements ActionListener {
+    	private RouteVisualiser visualiser;
+    	private int step;
+    	
+    	NavigateActionListener(RouteVisualiser visualiser, int step){
+    		this.step = step;
+    		this.visualiser = visualiser;
+    	}
+    	
+    	@Override
+    	public void actionPerformed(ActionEvent e) {
+    		this.visualiser.navigate(Math.abs(this.step), (int)Math.signum(this.step));
+    	}
     }
 }
 
