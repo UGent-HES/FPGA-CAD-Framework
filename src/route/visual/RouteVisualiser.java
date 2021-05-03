@@ -101,12 +101,12 @@ public class RouteVisualiser {
     }
     
     void drawMouseInfo(boolean mouseEnabled) {
-    	this.routingPanel.setMouseEnabled(mouseEnabled);
+    	this.RoutePanel.setMouseEnabled(mouseEnabled);
     	this.drawRouting(this.currentRouting);
     }
     
     void drawPlot(boolean plotEnabled) {
-    	this.routingPanel.setPlotEnabled(plotEnabled); //plotEnabled, this.bbCost);
+    	this.RoutePanel.setPlotEnabled(plotEnabled); //plotEnabled, this.bbCost);
     	this.drawRouting(this.currentRouting);
     }
     
