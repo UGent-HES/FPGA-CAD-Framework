@@ -65,7 +65,7 @@ public class RoutePanel extends JPanel {
     		if (!this.plotEnabled) {
     			this.setDimensions();
     			this.drawGrid(g);
-    			this.drawBlocks(g);
+    			this.drawWires(g);
     			if (this.mouseEnabled)this.drawBlockInformation(g);
     		} else {
     			this.drawPlot(g);
@@ -74,7 +74,7 @@ public class RoutePanel extends JPanel {
     }
     
     private void drawPlot(Graphics g) {
-    	int iteration = this.getIteration();
+    	int iteration = this.routing.getIteration();
     	
     	//set boundaries of plot
     	double alpha = 0.2;
@@ -88,7 +88,7 @@ public class RoutePanel extends JPanel {
     	
     }
     
-    private void setDimension() {
+    private void setDimensions() {
     	int maxWidth = this.getWidth();
     	int maxHeight = this.getHeight();
     	
@@ -115,4 +115,12 @@ public class RoutePanel extends JPanel {
     		}
     	}
     }
+    
+    private void drawWires(Graphics g) {
+    	//for (Map.Entry<Wires, Coordinates> wireEntry : this.routing.wires()) {
+    		//this.drawWire(wireEntry.getKey(), wireEntry.getValue(), g);
+    	//}
+    }
+    
+    
 }
