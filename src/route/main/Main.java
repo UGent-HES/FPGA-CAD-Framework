@@ -25,9 +25,14 @@ import route.circuit.pin.AbstractPin;
 import route.circuit.pin.GlobalPin;
 import route.route.ConnectionRouter;
 
+import route.visual.RouteVisualiser;
+
 public class Main {
 	
+	private boolean visualRoute = false;
+	
 	private Logger logger;
+	private RouteVisualiser visualiser;
 	
 	private String circuitName;
 	private File architectureFile, blifFile, netFile, placeFile, lookupDumpFile, sdcFile, rrgFile;
@@ -51,6 +56,8 @@ public class Main {
  				this.lookupDumpFile = new File(arguments[++i]);
 			} else if(arguments[i].contains("rr_graph_file")) {
 				this.rrgFile = new File(arguments[++i]);
+			} else if(arguments[i].contains("visualRoute")) {
+				this.visualRoute = true;
 			} else if(arguments[i].contains("output_file")) {
 				this.outputFile = arguments[++i];
 			}
@@ -71,6 +78,12 @@ public class Main {
 		this.checkFileExistence("SDC file", this.sdcFile);
 		
 		this.loadCircuit();
+		
+		// Enable the visualiser
+		this.visualiser = new RouteVisualiser(this.logger);
+		if(this.visualRoute) {
+			this.visualiser.setCircuit(this.circuit);
+		}
 		
 		this.readPlaceFile();
 		
@@ -97,6 +110,8 @@ public class Main {
 		System.out.println();
 		
 		this.circuit.getResourceGraph().printWireUsage();
+		
+		visualiser.createAndDrawGUI();
 	}
     private void loadCircuit() {
     	//Process the architecture file
