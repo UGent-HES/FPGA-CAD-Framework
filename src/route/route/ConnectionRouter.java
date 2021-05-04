@@ -1,7 +1,6 @@
 package route.route;
 
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.HashSet;
@@ -36,8 +35,6 @@ public class ConnectionRouter {
 	
 	private int MAX_PERCENTAGE_CRITICAL_CONNECTIONS = 3;
 	
-	private final short DYNAMIC_BB_DELTA_THRESHOLD = 2; // distance between routeNode of connections & BoundingBox (BB) before the BB of this connection enlarges. 
-	
 	private final PriorityQueue<QueueElement> queue;
 	
 	private final Collection<RouteNodeData> nodesTouched;
@@ -57,8 +54,9 @@ public class ConnectionRouter {
 	
 	public static enum CongestionLookAheadMethod {NONE, GROW_WHEN_CONGESTED, CLOSE_TO_BORDER, HOTSPOT_DETECTION}; // Different modes of congestion lookahead
 	public static final CongestionLookAheadMethod CONGESTION_LOOK_AHEAD_METHOD = CongestionLookAheadMethod.HOTSPOT_DETECTION;
-	public static final int ROUTE_AROUND = 2; // TODO
-	public static final int MAX_EXPANSION = 10; // TODO
+	private final short DYNAMIC_BB_DELTA_THRESHOLD = 2; // distance between routeNode of connections & BoundingBox (BB) before the BB of this connection enlarges.
+	private static final short ROUTE_AROUND = 3; // The amount of space permitted between the CongestedZone and the BoundingBox
+	private static final short MAX_EXPANSION = 10; // The maximum the BoundingBox will expand due to a CongestedZone
 
 	public static final boolean DEBUG = true;
 	
@@ -327,7 +325,7 @@ public class ConnectionRouter {
 			
 			// Congestion detection - cluster analysis
 			int connectionBoxesUpdated = 0;
-			List<CongestedZone> clusters = new ArrayList<CongestedZone>();
+			Collection<CongestedZone> clusters = new ArrayList<CongestedZone>();
 			this.routeTimers.congestionLookahead.start();
 
 			if (CONGESTION_LOOK_AHEAD_METHOD == CongestionLookAheadMethod.HOTSPOT_DETECTION) {
@@ -362,8 +360,6 @@ public class ConnectionRouter {
 			for(Connection con : sortedListOfConnections) {
 				zoneManager.AddCongestionData(con);
 				switch (CONGESTION_LOOK_AHEAD_METHOD) {
-				case NONE:
-					break;
 				case GROW_WHEN_CONGESTED:
 					// METHOD: enlarge when congested
 					if (con.congested()) { // TODO: put before switch (?)
@@ -376,62 +372,15 @@ public class ConnectionRouter {
 					// TODO: reference VPR properly for this part of their code (this part should be MIT)
 					if (con.dynamicUpdateBoundingBox(DYNAMIC_BB_DELTA_THRESHOLD)) {
 						connectionBoxesUpdated++;
-						
 					} // (see also https://github.com/verilog-to-routing/vtr-verilog-to-routing/blob/08f054c85e22ddf33811d91b2dd45daf5ee2341e/vpr/src/route/route_timing.cpp#L1849)
 					break;
 				case HOTSPOT_DETECTION:
 					// METHOD: enlarge when hotspot is threatening
 					// BB resize based on shape of hotspots
-				    BoundingBox bb = con.getBB();
-				    // BB  : NORTH, EAST , SOUTH, WEST
-                    // ZONE: UP   , RIGHT, DOWN , LEFT
-				    Set<CongestedZone> yaxis = new HashSet<>(); // NORTH - SOUTH
-				    Set<CongestedZone> xaxis = new HashSet<>();
-				    // Determine useful sets
-				    for (CongestedZone z : clusters) {
-				        //  LEFT    < EAST     && RIGHT   > WEST     && DOWN    < SOUTH + margin
-				        if (z.x_min < bb.x_max && z.x_max > bb.x_min && z.y_min < bb.y_min + ROUTE_AROUND && z.y_max > bb.y_max - ROUTE_AROUND) {
-				            yaxis.add(z);
-				        }
-				        if (z.y_min < bb.y_max && z.y_max > bb.y_min && z.x_max > bb.x_max - ROUTE_AROUND && z.x_min < bb.x_min + ROUTE_AROUND) {
-				            xaxis.add(z);
-				        }
-				    }
-				    // ALL
-				    BoundingBoxRange bbr = new BoundingBoxRange((short) 0);
-				    // NORTH-SOUTH
-				    for (CongestedZone z : yaxis) {
-                        short diff_north = (short) (z.y_max - bb.y_max + ROUTE_AROUND); // 𝛥UN - difference between upper zone border and north BB border
-                        short diff_south = (short) (bb.y_min - z.y_min + ROUTE_AROUND);
-                        if (diff_north > MAX_EXPANSION + ROUTE_AROUND) {
-                            diff_north = ROUTE_AROUND; // Too large for expansions, just expand normally.
-                        }
-                        if (diff_south > MAX_EXPANSION + ROUTE_AROUND) {
-                            diff_south = ROUTE_AROUND;
-                        }
-                        bbr.y_max = (short) Math.max(bbr.y_max, diff_north);
-                        bbr.y_min = (short) Math.max(bbr.y_min, diff_south);
-                    }
-				    // EAST-WEST
-				    for (CongestedZone z : xaxis) {
-                        short diff_east = (short) (bb.x_min - z.x_min + ROUTE_AROUND); // 𝛥UN - difference between upper zone border and north BB border
-                        short diff_west = (short) (z.x_max - bb.x_max + ROUTE_AROUND);
-                        if (diff_east > MAX_EXPANSION + ROUTE_AROUND) {
-                            diff_east = ROUTE_AROUND; // Too large for expansions, just expand normally.
-                        }
-                        if (diff_west > MAX_EXPANSION + ROUTE_AROUND) {
-                            diff_west = ROUTE_AROUND;
-                        }
-                        bbr.x_min = (short) Math.max(bbr.x_min, diff_east);
-                        bbr.x_max = (short) Math.max(bbr.x_max, diff_west);
-                    }
-				    // ALL
-				    if (!bbr.equals(BoundingBoxRange.zeroExpansion)) {
-				        // If BBrange is different from the zero expansion
+				    if (con.congestedZoneUpdateBoundingBox(clusters, ROUTE_AROUND, MAX_EXPANSION))
 				        connectionBoxesUpdated++;
-				    }
-				    bb.expand(bbr);
-					break;
+				case NONE:
+                    break;
 				}
 			}
 			
@@ -950,7 +899,6 @@ public class ConnectionRouter {
 		}
 	}
 }
-
 // Only implements the important (for us) methods
 //@SuppressWarnings("serial")
 //class PriorityRouteNodeSet extends PriorityQueue<RouteNode> implements SortedSet<RouteNode> {
