@@ -24,6 +24,7 @@ public abstract class RouteNode implements Comparable<RouteNode> {
 	
 	public final int numChildren;
 	public final RouteNode[] children;
+	//public final RouteNode[] parents;
 	public final RouteSwitch[] switches;
 
 	public final IndexedData indexedData;

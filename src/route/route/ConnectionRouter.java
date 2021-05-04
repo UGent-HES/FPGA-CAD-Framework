@@ -358,6 +358,7 @@ public class ConnectionRouter {
 					// METHOD: enlarge when congested
 					if (con.congested()) { // TODO: put before switch (?)
 						con.expandBoundingBoxRange(1);
+						connectionBoxesUpdated++;
 					}
 					break;
 				case CLOSE_TO_BORDER:

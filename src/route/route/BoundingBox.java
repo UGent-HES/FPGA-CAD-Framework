@@ -167,7 +167,7 @@ class CongestedZone extends BoundingBox {
 //		}
 		// BFS
 		int i = 0;
-		while (!q.isEmpty() && i<10) { // just try 10 nodes
+		while (!q.isEmpty()) { // just try 10 nodes
 			RouteNode node = q.remove();
 			congestedRouteNodes.remove(node); // also remove from the set
 			// process
