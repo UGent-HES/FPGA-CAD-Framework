@@ -390,10 +390,10 @@ public class ConnectionRouter {
 				    // Determine useful sets
 				    for (CongestedZone z : clusters) {
 				        //  LEFT    < EAST     && RIGHT   > WEST     && DOWN    < SOUTH + margin
-				        if (z.x_min < bb.x_max && z.x_max > bb.x_min && z.y_min < bb.y_min + 2 && z.y_max > bb.y_max - 2) {
+				        if (z.x_min < bb.x_max && z.x_max > bb.x_min && z.y_min < bb.y_min + ROUTE_AROUND && z.y_max > bb.y_max - ROUTE_AROUND) {
 				            yaxis.add(z);
 				        }
-				        if (z.y_min < bb.y_max && z.y_max > bb.y_min && z.x_max > bb.x_max - 2 && z.x_min < bb.x_min + 2) {
+				        if (z.y_min < bb.y_max && z.y_max > bb.y_min && z.x_max > bb.x_max - ROUTE_AROUND && z.x_min < bb.x_min + ROUTE_AROUND) {
 				            xaxis.add(z);
 				        }
 				    }
@@ -401,26 +401,26 @@ public class ConnectionRouter {
 				    BoundingBoxRange bbr = new BoundingBoxRange((short) 0);
 				    // NORTH-SOUTH
 				    for (CongestedZone z : yaxis) {
-                        short diff_north = (short) (z.y_max - bb.y_max + 2); // 𝛥UN - difference between upper zone border and north BB border
-                        short diff_south = (short) (bb.y_min - z.y_min + 2);
-                        if (diff_north > 10 + 2) {
-                            diff_north = 2; // Too large for expansions, just expand normally.
+                        short diff_north = (short) (z.y_max - bb.y_max + ROUTE_AROUND); // 𝛥UN - difference between upper zone border and north BB border
+                        short diff_south = (short) (bb.y_min - z.y_min + ROUTE_AROUND);
+                        if (diff_north > MAX_EXPANSION + ROUTE_AROUND) {
+                            diff_north = ROUTE_AROUND; // Too large for expansions, just expand normally.
                         }
-                        if (diff_south > 10 + 2) {
-                            diff_south = 2;
+                        if (diff_south > MAX_EXPANSION + ROUTE_AROUND) {
+                            diff_south = ROUTE_AROUND;
                         }
                         bbr.y_max = (short) Math.max(bbr.y_max, diff_north);
                         bbr.y_min = (short) Math.max(bbr.y_min, diff_south);
                     }
 				    // EAST-WEST
 				    for (CongestedZone z : xaxis) {
-                        short diff_east = (short) (bb.x_min - z.x_min + 2); // 𝛥UN - difference between upper zone border and north BB border
-                        short diff_west = (short) (z.x_max - bb.x_max + 2);
-                        if (diff_east > 10 + 2) {
-                            diff_east = 2; // Too large for expansions, just expand normally.
+                        short diff_east = (short) (bb.x_min - z.x_min + ROUTE_AROUND); // 𝛥UN - difference between upper zone border and north BB border
+                        short diff_west = (short) (z.x_max - bb.x_max + ROUTE_AROUND);
+                        if (diff_east > MAX_EXPANSION + ROUTE_AROUND) {
+                            diff_east = ROUTE_AROUND; // Too large for expansions, just expand normally.
                         }
-                        if (diff_west > 10 + 2) {
-                            diff_west = 2;
+                        if (diff_west > MAX_EXPANSION + ROUTE_AROUND) {
+                            diff_west = ROUTE_AROUND;
                         }
                         bbr.x_min = (short) Math.max(bbr.x_min, diff_east);
                         bbr.x_max = (short) Math.max(bbr.x_max, diff_west);
