@@ -27,6 +27,7 @@ public class RouteVisualiser {
 
     private JFrame frame;
     private JLabel routingLabel;
+    private RoutePanel routePanel;
 
     private boolean enabled = false;
     private Circuit circuit;
@@ -43,9 +44,9 @@ public class RouteVisualiser {
         this.circuit = circuit;
     }
     
-    public void addRouting(String name) {
+    public void addRouting(int iteration) {
     	if (this.enabled) {
-    		this.routings.add(new Routing(name, this.circuit));
+    		this.routings.add(new Routing(iteration, this.circuit));
     	}
     }
     
@@ -56,7 +57,7 @@ public class RouteVisualiser {
             return;
         }
         
-        this.addRouting("Final routing");
+        this.addRouting(100); //TODO: this is placeholder, probably add internal iteration counter to addRouting
         
         this.frame = new JFrame("Routing visualiser");
         this.frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
@@ -100,13 +101,26 @@ public class RouteVisualiser {
         
     }
     
+    private void drawRouting(int index) {
+    	this.currentRouting = index;
+    	
+    	Routing routing = this.routings.get(index);
+    	
+    	this.routingLabel.setText("Iteration ".concat(Integer.toString(index)));
+    	this.routePanel.setRouting(routing); //if not work, routing -> this.placements.get(index) 
+    }
+    
+    void navigate(int type, int step) {
+    	//navigate and draw
+    }
+    
     void drawMouseInfo(boolean mouseEnabled) {
-    	this.RoutePanel.setMouseEnabled(mouseEnabled);
+    	this.routePanel.setMouseEnabled(mouseEnabled);
     	this.drawRouting(this.currentRouting);
     }
     
     void drawPlot(boolean plotEnabled) {
-    	this.RoutePanel.setPlotEnabled(plotEnabled); //plotEnabled, this.bbCost);
+    	this.routePanel.setPlotEnabled(plotEnabled); //plotEnabled, this.bbCost);
     	this.drawRouting(this.currentRouting);
     }
     
