@@ -14,7 +14,7 @@ class Routing {
 	private String name; //really needed?
 	private int iteration;
 	private Circuit circuit;
-	private int numBlocks;
+	private int numWires;
 	
 	Routing(int iteration, Circuit circuit) {
 		this.initialiseData(iteration, circuit);
@@ -22,7 +22,7 @@ class Routing {
 		//do some stuff
 	}
 	
-	Routing(int iteration, List<RouteNode> routeNodeList) {
+	Routing(int iteration, Circuit circuit, List<RouteNode> routeNodeList) {
 		this.initialiseData(iteration, circuit);
 	}
 	

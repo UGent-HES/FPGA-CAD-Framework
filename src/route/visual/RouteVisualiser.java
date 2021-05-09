@@ -53,7 +53,7 @@ public class RouteVisualiser {
     
     public void addRouting(int iteration, List<RouteNode> routeNodeList) {
     	if (this.enabled) {
-    		this.routings.add(new Routing(iteration, this.circuit, routeNodeList))
+    		this.routings.add(new Routing(iteration, this.circuit, routeNodeList));
     	}
     }
     
