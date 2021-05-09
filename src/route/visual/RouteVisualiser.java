@@ -92,12 +92,23 @@ public class RouteVisualiser {
         }
         */
         JButton previousGradientButton = new JButton("<");
-        //previousGradientButton.addActionListener(new NavigateActionListener(this, -1));
+        previousGradientButton.addActionListener(new NavigateActionListener(this, -1));
+        buttonPanel.add(previousGradientButton, BorderLayout.CENTER);
         
-        //do the drawing
+
+        JButton nextGradientButton = new JButton(">");
+        nextGradientButton.addActionListener(new NavigateActionListener(this, 1));
+        buttonPanel.add(nextGradientButton, BorderLayout.CENTER);
         
+        // fast backwards button?
         
+        JButton enableMouse = new JButton("Info");
+        //laten we best nog even dummy
         
+        this.routePanel = new RoutePanel(this.logger);
+        pane.add(this.routePanel);
+        
+        this.drawRouting(this.routings.size() - 1);       
         
     }
     
