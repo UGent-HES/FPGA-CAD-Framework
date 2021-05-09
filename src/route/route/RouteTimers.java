@@ -11,7 +11,9 @@ public class RouteTimers {
 	public Timer setRerouteCriticality;
 	public Timer calculateStatistics;
 	public Timer updateCost;
-	public Timer congestionLookahead;
+	public Timer congestionDetection; // global rrg detection
+	public Timer congestionLookahead; // applying to all connections
+	public Timer congestionCost; // time used to calculate the expected congestion cost
 	
 	public RouteTimers() {
 		this.firstIteration        = new Timer("first iteration");
@@ -25,6 +27,8 @@ public class RouteTimers {
 		this.calculateStatistics   = new Timer("calc stat");
 		this.updateCost            = new Timer("update cost");
 		this.congestionLookahead   = new Timer("congestion lookahead");
+		this.congestionDetection   = new Timer("congestion detection");
+		this.congestionCost        = new Timer("expected congestion cost");
 	}
 	
 	@Override
@@ -42,6 +46,8 @@ public class RouteTimers {
 		result += this.updateTiming;
 		result += this.updateCost;
 		result += this.congestionLookahead;
+		result += this.congestionDetection;
+		result += this.congestionCost;
 		
 		return result;
 	}
