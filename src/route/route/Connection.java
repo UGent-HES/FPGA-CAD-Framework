@@ -1,7 +1,6 @@
 package route.route;
 
 import java.util.ArrayList;
-import java.util.Collection;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
@@ -144,33 +143,50 @@ public class Connection implements Comparable<Connection>  {
 	    return bb;
 	}
 	
-	public boolean dynamicUpdateBoundingBox(short dynamicBBDeltaThreshold) {
-		boolean updatedBB = false;
+	public boolean dynamicUpdateBoundingBox(short dynamicBBDeltaThreshold, short bb_growth) {
 		BoundingBox bb = getBB();
 		BoundingBox usedBB = this.calculateUsedBoundingBox();
 		BoundingBoxRange delta = bb.delta(usedBB);
 		
+		BoundingBoxRange bbr = new BoundingBoxRange((short) 0);
 		if (delta.x_min <= dynamicBBDeltaThreshold && bb.x_min > 0) {
-			this.bbRange.x_min++; // we increase the range, thus decreasing the BB
-            updatedBB = true;
+			bbr.x_min = bb_growth; // we increase the range, thus decreasing the BB
         }
 		if (delta.y_min <= dynamicBBDeltaThreshold && bb.y_min > 0) {
-			this.bbRange.y_min++;
-            updatedBB = true;
+			bbr.y_min = bb_growth;
         }
         if (delta.x_max <= dynamicBBDeltaThreshold && bb.x_max < Circuit.maxWidth - 1) {
-            this.bbRange.x_max++;
-            updatedBB = true;
+            bbr.x_max = bb_growth;
         }
         if (delta.y_max <= dynamicBBDeltaThreshold && bb.y_max < Circuit.maxHeight - 1) {
-            this.bbRange.y_max++;
-            updatedBB = true;
+            bbr.y_max = bb_growth;
         }
 		
-		return updatedBB;
+        if (!bbr.equals(BoundingBoxRange.zeroExpansion)) {
+            expandBoundingBoxRange(bbr);
+            return true;
+        }
+		return false;
 	}
+	public boolean dynamicUpdateBoundingBox(short delta_route_around) {
+	    // delta_route_around: minimal distance between usedBB and newBB 
+        BoundingBox currentBB = getBB();
+        BoundingBox usedBB = this.calculateUsedBoundingBox();
+        BoundingBoxRange surplusBBR = currentBB.delta(usedBB); // the 'surplus' around the usedBB
+        
+        BoundingBoxRange marginBBR = new BoundingBoxRange(delta_route_around); // the actual 'margin' we would like to ensure
+        BoundingBoxRange will_add = marginBBR.delta(surplusBBR);
+        
+        // clip to positive (only increase BBR)
+        will_add = will_add.clip_low(0);
+        
+        expandBoundingBoxRange(will_add);
+        return !will_add.equals(BoundingBoxRange.zeroExpansion);
+    }
 	
-	public boolean congestedZoneUpdateBoundingBox(Collection<CongestedZone> clusters, short ROUTE_AROUND, short MAX_EXPANSION) {
+	public boolean congestedZoneUpdateBoundingBox(Iterable<CongestedZone> clusters, short ROUTE_AROUND, short MAX_EXPANSION) {
+	    // clusters is either just an Iterable (like now) to just easily loop over the clusters
+	    // OR it can be enhanced to use `clusters.subset(begin, end)` from a SortedSet or so
 	    BoundingBox bb = getBB();
         // BB  : NORTH, EAST , SOUTH, WEST
         // ZONE: UP   , RIGHT, DOWN , LEFT
