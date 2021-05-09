@@ -17,6 +17,13 @@ abstract class Box implements Comparable<Box> {
 	public short y_min;
 	public short y_max;
 	
+	public Box() {}
+	public Box(short x_min, short x_max, short y_min, short y_max) {
+        this.x_min = x_min;
+        this.x_max = x_max;
+        this.y_min = y_min;
+        this.y_max = y_max;
+    }
 	// this should be subclass specific
 	public Box expand(int uniformRange) {
 		short v = (short) uniformRange;
@@ -53,14 +60,8 @@ abstract class Box implements Comparable<Box> {
 
 class BoundingBox extends Box {
 	public BoundingBox() {}
-	public BoundingBox(short uniformRange) {
-		this(uniformRange, uniformRange, uniformRange, uniformRange);
-	}
 	public BoundingBox(short x_min, short x_max, short y_min, short y_max) {
-		this.x_min = x_min;
-		this.x_max = x_max;
-		this.y_min = y_min;
-		this.y_max = y_max;
+	    super(x_min, x_max, y_min, y_max);
 	}
 	// copy constructor
 	public BoundingBox(BoundingBox original) {
@@ -116,10 +117,7 @@ class BoundingBoxRange extends Box {
 		this(uniformRange, uniformRange, uniformRange, uniformRange);
 	}
 	public BoundingBoxRange(short x_min, short x_max, short y_min, short y_max) {
-		this.x_min = x_min;
-		this.x_max = x_max;
-		this.y_min = y_min;
-		this.y_max = y_max;
+	    super(x_min, x_max, y_min, y_max);
 	}
 	// copy constructor
 	public BoundingBoxRange(BoundingBoxRange original) {
@@ -129,10 +127,6 @@ class BoundingBoxRange extends Box {
 	    return this.expand(uniformRange, uniformRange, uniformRange, uniformRange);
 	}
 	public BoundingBoxRange expand(BoundingBoxRange bbRange) {
-//		this.x_min += bbRange.x_min;
-//		this.x_max += bbRange.x_max;
-//		this.y_min += bbRange.y_min;
-//		this.y_max += bbRange.y_max;
 		return this.expand(bbRange.x_min, bbRange.x_max, bbRange.y_min, bbRange.y_max);
 	}
 	public BoundingBoxRange expand(short x_min, short x_max,short y_min,short y_max) {
@@ -142,11 +136,31 @@ class BoundingBoxRange extends Box {
         this.y_max += y_max;
         return this;
     }
+	public BoundingBoxRange delta(BoundingBoxRange inner) {
+        // if inner is the smallest Box, then the resulting delta is positive
+	    // Here, the BBR are supposed to be around the same Box
+        BoundingBoxRange delta = new BoundingBoxRange();
+        delta.x_min = (short) (this.x_min - inner.x_min);
+        delta.x_max = (short) (this.x_max - inner.x_max);
+        delta.y_min = (short) (this.y_min - inner.y_min);
+        delta.y_max = (short) (this.y_max - inner.y_max);
+        return delta;
+    }
+	public BoundingBoxRange clip_low(int low) {
+	    x_min = (short) Math.max(x_min, low);
+	    x_max = (short) Math.max(x_max, low);
+	    y_min = (short) Math.max(y_min, low);
+	    y_max = (short) Math.max(y_max, low);
+	    return this;
+	}
 }
 
 class CongestedZone extends BoundingBox {
 	public CongestedZone(RouteNode center) {
 		super(center.xlow, center.xhigh, center.ylow, center.yhigh);
+	}
+	public CongestedZone(short x_min, short x_max, short y_min, short y_max) {
+	    super(x_min, x_max, y_min, y_max);
 	}
 
 	// TODO: revise this function
