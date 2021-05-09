@@ -1,9 +1,11 @@
 package route.route;
 
+import java.util.Iterator;
+
 import route.circuit.Circuit;
 import route.circuit.resource.RouteNode;
 
-public class GridZoneManager implements ZoneManager {
+public class GridZoneManager implements ZoneManager, Iterable<CongestedZone> {
 	private int zonewidth, zoneheight;
 	private int width, height; //amount of zones
 	
@@ -20,7 +22,7 @@ public class GridZoneManager implements ZoneManager {
 		normalizedzonecongestion = new float[this.width][this.height];
 	}
 	
-	public int[][] getZoneCoords(RouteNode node) {
+	private int[][] getZoneCoords(RouteNode node) {
 		//returns coordinates of zones that node goes through
 		int xlow = node.xlow/ this.zonewidth;
 		int ylow = node.ylow/ this.zoneheight;
@@ -83,4 +85,29 @@ public class GridZoneManager implements ZoneManager {
 			}
 		}
 	}
+
+    @Override
+    public Iterator<CongestedZone> iterator() {
+        return new Iterator<CongestedZone>() {
+            int i = 0;
+            int j = 0;
+            @Override
+            public boolean hasNext() {
+                return i < width;
+            }
+
+            @Override
+            public CongestedZone next() {
+                System.err.println("Unfinished function, check the code again");
+                //CongestedZone zone = new CongestedZone((short) (i*zonewidth), (short) ((i+1)*zonewidth), (short) ((j+1)*zoneheight), (short) ((j+1)*zoneheight));
+                // TODO: skip uncongested zones (if normalizedzonecongestion is beneath threshold or something)
+                j++;
+                if (j == height) {
+                    i++;
+                    j = 0;
+                }
+                return null;
+            }
+        };
+    }
 }
