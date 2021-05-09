@@ -3,9 +3,11 @@ package route.visual;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Set;
+import java.util.List;
 
 import route.circuit.Circuit;
 import route.circuit.block.GlobalBlock;
+import route.circuit.resource.RouteNode;
 
 class Routing {
 	
@@ -18,6 +20,10 @@ class Routing {
 		this.initialiseData(iteration, circuit);
 		
 		//do some stuff
+	}
+	
+	Routing(int iteration, List<RouteNode> routeNodeList) {
+		this.initialiseData(iteration, circuit);
 	}
 	
 	//some other constructors

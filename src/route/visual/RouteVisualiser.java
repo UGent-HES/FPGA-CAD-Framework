@@ -3,6 +3,7 @@ package route.visual;
 import route.circuit.Circuit;
 import route.circuit.block.GlobalBlock;
 import route.main.Logger;
+import route.circuit.resource.RouteNode;
 
 import java.awt.BorderLayout;
 import java.awt.Container;
@@ -47,6 +48,12 @@ public class RouteVisualiser {
     public void addRouting(int iteration) {
     	if (this.enabled) {
     		this.routings.add(new Routing(iteration, this.circuit));
+    	}
+    }
+    
+    public void addRouting(int iteration, List<RouteNode> routeNodeList) {
+    	if (this.enabled) {
+    		this.routings.add(new Routing(iteration, this.circuit, routeNodeList))
     	}
     }
     
