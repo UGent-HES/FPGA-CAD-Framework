@@ -50,8 +50,8 @@ public class ConnectionRouter {
 	private RouteTimers routeTimers;
 
 	// Congestion lookahead
-	private final boolean CONG_LA_W = false; // Congestion LookAhead Weight Adjustment
 	private final boolean CONG_LA_BB = false;// Congestion LookAhead BoundinbBox Adjustment
+	private final boolean CONG_LA_W = false; // Congestion LookAhead Weight Adjustment - works for the moment only with GRID_DETECTION
 
 	// Weight factor adjustments
 	private float alphaC = 0.05f;   // weight factor for    congestion          in cost calculation
@@ -99,7 +99,7 @@ public class ConnectionRouter {
 		if (CONG_LA_METHOD == CongLAMethod.GRID_DETECTION) {
 		    this.zoneManager = new GridZoneManager(6,4);
 		}
-		else if (CONG_LA_METHOD == CongLAMethod.GRID_DETECTION) {
+		else if (CONG_LA_METHOD == CongLAMethod.HOTSPOT_DETECTION) {
 		    this.zoneManager = new HotspotZoneManager();
 		}
 	}
