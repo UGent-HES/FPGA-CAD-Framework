@@ -26,10 +26,7 @@ public class ConnectionRouter {
 	private final float acc_fac = 1;		// set how much more overuse contributes to acc cost each iteration
 	private float alphaWLD = 1.4f; 			// weight factor for 	wire length delay 	in cost calculation
 	private float alphaTD = 0.7f;			// weight factor for 	timing delay 		in cost calculation
-	private float alphaC = 0.05f;	// weight factor for 	congestion			in cost calculation
-	
-	private ZoneManager zoneManager;
-	
+
 	private float MIN_REROUTE_CRITICALITY = 0.85f, REROUTE_CRITICALITY;
 	private final List<Connection> criticalConnections;
 	
@@ -51,12 +48,28 @@ public class ConnectionRouter {
 	private int itry; // Current iteration of global routing
 	
 	private RouteTimers routeTimers;
+
+	// Congestion lookahead
+	private final boolean CONG_LA_W = false; // Congestion LookAhead Weight Adjustment
+	private final boolean CONG_LA_BB = false;// Congestion LookAhead BoundinbBox Adjustment
+
+	// Weight factor adjustments
+	private float alphaC = 0.05f;   // weight factor for    congestion          in cost calculation
+
+	// Bounding Box adjustments
+	// CongestionLookAheadMethod - Different modes of congestion lookahead - NONE is obtained by CONG_LA_W/BB both to false
+	public static enum CongLAMethod {GROW_WHEN_CONGESTED, CLOSE_TO_BORDER_GROW, CLOSE_TO_BORDER_DELTA, GRID_DETECTION, HOTSPOT_DETECTION, HOTSPOT_OR_GROW, HOTSPOT_AND_CLOSE};
+	public static final CongLAMethod CONG_LA_METHOD = CongLAMethod.HOTSPOT_DETECTION; // CONGESTION_LOOK_AHEAD_METHOD
 	
-	public static enum CongestionLookAheadMethod {NONE, GROW_WHEN_CONGESTED, CLOSE_TO_BORDER, HOTSPOT_DETECTION}; // Different modes of congestion lookahead
-	public static final CongestionLookAheadMethod CONGESTION_LOOK_AHEAD_METHOD = CongestionLookAheadMethod.HOTSPOT_DETECTION;
+	// if (GROW_WHEN_CONGESTED) OR if(CLOSE_TO_BORDER_GROW):
+	private final short BB_GROWTH = 2;
+	// if (CLOSE_TO_BORDER both):
 	private final short DYNAMIC_BB_DELTA_THRESHOLD = 2; // distance between routeNode of connections & BoundingBox (BB) before the BB of this connection enlarges.
-	private static final short ROUTE_AROUND = 3; // The amount of space permitted between the CongestedZone and the BoundingBox
+	// if (HOTSPOT_DETECTION) || if (CLOSE_TO_BORDER_DELTA):
+	private static final short ROUTE_AROUND = 2; // The amount of space permitted between the CongestedZone and the BoundingBox
 	private static final short MAX_EXPANSION = 10; // The maximum the BoundingBox will expand due to a CongestedZone
+	// if (GRID_DETECTION || HOTSPOT_DETECTION):
+	private ZoneManager zoneManager;
 
 	public static final boolean DEBUG = true;
 	
@@ -83,7 +96,12 @@ public class ConnectionRouter {
 		
 		this.routeTimers = new RouteTimers();
 		
-		this.zoneManager = new ZoneManager(6,4);
+		if (CONG_LA_METHOD == CongLAMethod.GRID_DETECTION) {
+		    this.zoneManager = new GridZoneManager(6,4);
+		}
+		else if (CONG_LA_METHOD == CongLAMethod.GRID_DETECTION) {
+		    this.zoneManager = new HotspotZoneManager();
+		}
 	}
 	
 	private float getAverageCost(RouteNodeType type) {
@@ -213,7 +231,8 @@ public class ConnectionRouter {
 		
     	return timeMilliseconds;
     }
-    private void doRouting(int nrOfTrials, int fixOpins) {
+    @SuppressWarnings("unused")
+	private void doRouting(int nrOfTrials, int fixOpins) {
     	// fixOpins: number of iterations - 1 while the Opins are fixed
     	
     	this.nodesTouched.clear();
@@ -325,67 +344,96 @@ public class ConnectionRouter {
 			
 			// Congestion detection - cluster analysis
 			int connectionBoxesUpdated = 0;
-			Collection<CongestedZone> clusters = new ArrayList<CongestedZone>();
-			this.routeTimers.congestionLookahead.start();
+			Collection<CongestedZone> clusters = null; // List of congested zones - null value only needed to satisfy compiler
+			this.routeTimers.congestionDetection.start();
 
-			if (CONGESTION_LOOK_AHEAD_METHOD == CongestionLookAheadMethod.HOTSPOT_DETECTION) {
-				//do congestion detection here
-				//this is meant for techniques working on the whole rrg.
-
-				// We want a structure with least time complexity for: remove(), last() (OR first(), depends on comparator) and initialization
-				// We have 2 approaches:
-				SortedSet<RouteNode> congestedRouteNodes = new TreeSet<RouteNode>(Comparators.CONGESTION_COMPARATOR);
-				//SortedSet<RouteNode> congestedRouteNodes = new PriorityRouteNodeSet(Comparators.CONGESTION_COMPARATOR);
-				// insert overused nodes
-				for (RouteNode node: this.rrg.getRouteNodes()) {
-					if (node.overUsed()) {
-						congestedRouteNodes.add(node);
-					}
-				}
-				RouteNode congestionCenter = null;
-				while (! congestedRouteNodes.isEmpty()) {
-					congestionCenter = congestedRouteNodes.first();
-					CongestedZone z = CongestedZone.findCongestionZone(congestionCenter, congestedRouteNodes); // modify in place
-					// add zone to list if not null
-					if (z != null) {
-						clusters.add(z);
-					}
-				}
-				// List of congested zones
-			}
-			//clear zone congestion
-			zoneManager.clearZoneCongestion();
-			
-			// Apply congestion lookahead information on the boundingBox
-			for(Connection con : sortedListOfConnections) {
-				zoneManager.AddCongestionData(con);
-				switch (CONGESTION_LOOK_AHEAD_METHOD) {
-				case GROW_WHEN_CONGESTED:
-					// METHOD: enlarge when congested
-					if (con.congested()) { // TODO: put before switch (?)
-						con.expandBoundingBoxRange(2);
-						connectionBoxesUpdated++;
-					}
-					break;
-				case CLOSE_TO_BORDER:
-					// METHOD: enlarge when close to border
-					// TODO: reference VPR properly for this part of their code (this part should be MIT)
-					if (con.dynamicUpdateBoundingBox(DYNAMIC_BB_DELTA_THRESHOLD)) {
-						connectionBoxesUpdated++;
-					} // (see also https://github.com/verilog-to-routing/vtr-verilog-to-routing/blob/08f054c85e22ddf33811d91b2dd45daf5ee2341e/vpr/src/route/route_timing.cpp#L1849)
-					break;
+			if (CONG_LA_W || CONG_LA_BB) {
+				// do congestion detection here
+				// this is meant for techniques working on the whole rrg.
+				switch (CONG_LA_METHOD) {
 				case HOTSPOT_DETECTION:
-					// METHOD: enlarge when hotspot is threatening
-					// BB resize based on shape of hotspots
-				    if (con.congestedZoneUpdateBoundingBox(clusters, ROUTE_AROUND, MAX_EXPANSION))
-				        connectionBoxesUpdated++;
-				case NONE:
-                    break;
+					clusters = (HotspotZoneManager) zoneManager;
+					// We want a structure with least time complexity for: remove(), last() (OR first(), depends on comparator) and initialization
+					// We have 2 approaches:
+					SortedSet<RouteNode> congestedRouteNodes = new TreeSet<RouteNode>(Comparators.CONGESTION_COMPARATOR);
+					//SortedSet<RouteNode> congestedRouteNodes = new PriorityRouteNodeSet(Comparators.CONGESTION_COMPARATOR);
+					// insert overused nodes
+					for (RouteNode node: this.rrg.getRouteNodes()) {
+						if (node.overUsed()) {
+							congestedRouteNodes.add(node);
+						}
+					}
+					RouteNode congestionCenter = null;
+					while (! congestedRouteNodes.isEmpty()) {
+						congestionCenter = congestedRouteNodes.first();
+						CongestedZone z = CongestedZone.findCongestionZone(congestionCenter, congestedRouteNodes); // modify in place
+						// add zone to list if not null
+						if (z != null) {
+							clusters.add(z);
+						}
+					}
+					break;
+				case GRID_DETECTION:
+					//clear zone congestion
+					zoneManager.clear();
+					for (Connection con : sortedListOfConnections) {
+						((GridZoneManager) zoneManager).AddCongestionData(con);
+					}
+					//normalize zone congestion
+					zoneManager.normalize();
+					break;
+				default:
+					break;
 				}
 			}
-			
-			//normalize zone congestion
-			zoneManager.Normalize();
+			this.routeTimers.congestionDetection.finish();
+			this.routeTimers.congestionLookahead.start();
+			// Apply congestion lookahead information on the boundingBox if activated
+			if (CONG_LA_BB) {
+				for(Connection con : sortedListOfConnections) {
+					switch (CONG_LA_METHOD) {
+					case GROW_WHEN_CONGESTED:
+						// METHOD: enlarge when congested
+						if (con.congested()) { // don't put this before the for-loop, because also not congested routes are rerouted
+							con.expandBoundingBoxRange(BB_GROWTH);
+							connectionBoxesUpdated++;
+						}
+						break;
+					case CLOSE_TO_BORDER_GROW:
+						// METHOD: enlarge when close to border
+						// TODO: reference VPR properly for this part of their code (this part should be MIT)
+						if (con.dynamicUpdateBoundingBox(DYNAMIC_BB_DELTA_THRESHOLD, BB_GROWTH)) {
+							connectionBoxesUpdated++;
+						} // (see also https://github.com/verilog-to-routing/vtr-verilog-to-routing/blob/08f054c85e22ddf33811d91b2dd45daf5ee2341e/vpr/src/route/route_timing.cpp#L1849)
+						break;
+					case CLOSE_TO_BORDER_DELTA:
+						if (con.dynamicUpdateBoundingBox(ROUTE_AROUND)) {
+							connectionBoxesUpdated++;
+						}
+						break;
+					case HOTSPOT_DETECTION:
+						// METHOD: enlarge when hotspot is threatening
+						// BB resize based on shape of hotspots
+						if (con.congestedZoneUpdateBoundingBox(clusters, ROUTE_AROUND, MAX_EXPANSION))
+							connectionBoxesUpdated++;
+						break;
+					case HOTSPOT_OR_GROW:
+						if (con.congestedZoneUpdateBoundingBox(clusters, ROUTE_AROUND, MAX_EXPANSION))
+							connectionBoxesUpdated++;
+						else if (con.congested()) {
+							con.expandBoundingBoxRange(BB_GROWTH);
+							connectionBoxesUpdated++;
+						}
+						break;
+					case HOTSPOT_AND_CLOSE:
+						break;
+					case GRID_DETECTION:
+						break;
+					default:
+						break;
+					}
+				}
+			}
 			
     		this.routeTimers.congestionLookahead.finish();
 			
@@ -406,7 +454,7 @@ public class ConnectionRouter {
 			long iterationEnd = System.nanoTime();
 			int rt = (int) Math.round((iterationEnd-iterationStart) * Math.pow(10, -6));
 			
-			System.out.printf("%9d  %8.2f  %8.2f  %12.3f  %9d  %11d  %8d  %6.2f%%  %11d  %8d  %11d  %s\n", this.itry, this.alphaWLD, this.alphaTD, REROUTE_CRITICALITY, rt, this.connectionsRoutedIteration, overUsed, overUsePercentage, connectionBoxesUpdated, clusters.size(), wireLength, maxDelayString);
+			System.out.printf("%9d  %8.2f  %8.2f  %12.3f  %9d  %11d  %8d  %6.2f%%  %11d  %8d  %11d  %s\n", this.itry, this.alphaWLD, this.alphaTD, REROUTE_CRITICALITY, rt, this.connectionsRoutedIteration, overUsed, overUsePercentage, connectionBoxesUpdated, clusters == null ? 0 : clusters.size(), wireLength, maxDelayString);
 
 			// Check if the routing is valid, if realizable return, the routing succeeded
 			if (validRouting) {
@@ -732,6 +780,7 @@ public class ConnectionRouter {
 		}
 	}
 	
+	@SuppressWarnings("unused")
 	private void addNodeToQueue(RouteNode node, RouteNode child, Connection con) {
 		RouteNodeData data = child.routeNodeData;
 		int countSourceUses = data.countSourceUses(con.source);
@@ -752,7 +801,7 @@ public class ConnectionRouter {
 			
 			this.set_expected_distance_to_target(child, target);
 			
-			float expected_distance_cost, expected_timing_cost, expected_congestion_cost;
+			float expected_distance_cost, expected_timing_cost;
 			
 			if(child.type.equals(RouteNodeType.CHANX)) {
 				expected_distance_cost = this.distance_same_dir * COST_PER_DISTANCE_HORIZONTAL + this.distance_ortho_dir * COST_PER_DISTANCE_VERTICAL;
@@ -763,12 +812,16 @@ public class ConnectionRouter {
 			}
 			
 			float expected_wire_cost = expected_distance_cost / (1 + countSourceUses) + IPIN_BASE_COST;
-			expected_congestion_cost = zoneManager.getZoneCongestion(node);
 			
 			new_lower_bound_total_path_cost += this.alphaWLD * (1 - con.getCriticality()) * expected_wire_cost; //add wire length 	contribution to cost
 			new_lower_bound_total_path_cost += this.alphaTD * con.getCriticality() * expected_timing_cost;		//add timing 		contribution to cost
-			new_lower_bound_total_path_cost *= 1 + this.alphaC * expected_congestion_cost; 							//add congestion 	contribution to cost
-		
+
+			if (CONG_LA_W && CONG_LA_METHOD == CongLAMethod.GRID_DETECTION) { // if weight adjusment activated AND the CongLAMethod is supported
+			    this.routeTimers.congestionCost.start();
+			    float expected_congestion_cost = zoneManager.getZoneCongestion(node);
+			    new_lower_bound_total_path_cost *= 1 + this.alphaC * expected_congestion_cost;                           //add congestion    contribution to cost
+			    this.routeTimers.congestionCost.finish();
+			}
 		}
 		
 		this.addNodeToQueue(child, node, new_partial_path_cost, new_lower_bound_total_path_cost);
