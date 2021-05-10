@@ -15,6 +15,7 @@ import route.circuit.architecture.BlockType;
 import route.main.Logger;
 import route.main.Logger.Location;
 import route.main.Logger.Stream;
+import route.visual.RouteVisualiser;
 
 public class ResourceGraph {
 	private final Circuit circuit;
@@ -539,6 +540,17 @@ public class ResourceGraph {
 			}
 		}
 	}
+	
+	public void addRoutingToVisualiser(int iteration, RouteVisualiser visualiser) {
+		List<RouteNode> wires = new ArrayList<>();
+		for (RouteNode routeNode : this.routeNodes) {
+			if (routeNode.isWire && routeNode.used()) {
+				wires.add(routeNode);
+			}
+		}
+		visualiser.addRouting(iteration, wires);
+	}
+	
 	public int wireSegmentsUsed() {
 		int wireSegmentsUsed = 0;
 		for(RouteNode routeNode : this.routeNodes) {

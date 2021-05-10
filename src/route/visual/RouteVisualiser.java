@@ -3,6 +3,7 @@ package route.visual;
 import route.circuit.Circuit;
 import route.circuit.block.GlobalBlock;
 import route.main.Logger;
+import route.circuit.resource.RouteNode;
 
 import java.awt.BorderLayout;
 import java.awt.Container;
@@ -27,6 +28,7 @@ public class RouteVisualiser {
 
     private JFrame frame;
     private JLabel routingLabel;
+    private RoutePanel routePanel;
 
     private boolean enabled = false;
     private Circuit circuit;
@@ -43,9 +45,15 @@ public class RouteVisualiser {
         this.circuit = circuit;
     }
     
-    public void addRouting(String name) {
+    public void addRouting(int iteration) {
     	if (this.enabled) {
-    		this.routings.add(new Routing(name, this.circuit));
+    		this.routings.add(new Routing(iteration, this.circuit));
+    	}
+    }
+    
+    public void addRouting(int iteration, List<RouteNode> routeNodeList) {
+    	if (this.enabled) {
+    		this.routings.add(new Routing(iteration, this.circuit, routeNodeList));
     	}
     }
     
@@ -56,7 +64,7 @@ public class RouteVisualiser {
             return;
         }
         
-        this.addRouting("Final routing");
+        this.addRouting(100); //TODO: this is placeholder, probably add internal iteration counter to addRouting
         
         this.frame = new JFrame("Routing visualiser");
         this.frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
@@ -91,22 +99,46 @@ public class RouteVisualiser {
         }
         */
         JButton previousGradientButton = new JButton("<");
-        //previousGradientButton.addActionListener(new NavigateActionListener(this, -1));
+        previousGradientButton.addActionListener(new NavigateActionListener(this, -1));
+        buttonPanel.add(previousGradientButton, BorderLayout.CENTER);
         
-        //do the drawing
+
+        JButton nextGradientButton = new JButton(">");
+        nextGradientButton.addActionListener(new NavigateActionListener(this, 1));
+        buttonPanel.add(nextGradientButton, BorderLayout.CENTER);
         
+        // fast backwards button?
         
+        JButton enableMouse = new JButton("Info");
+        //laten we best nog even dummy
         
+        this.routePanel = new RoutePanel(this.logger);
+        pane.add(this.routePanel);
+        
+        this.drawRouting(this.routings.size() - 1);       
         
     }
     
+    private void drawRouting(int index) {
+    	this.currentRouting = index;
+    	
+    	Routing routing = this.routings.get(index);
+    	
+    	this.routingLabel.setText("Iteration ".concat(Integer.toString(index)));
+    	this.routePanel.setRouting(routing); //if not work, routing -> this.placements.get(index) 
+    }
+    
+    void navigate(int type, int step) {
+    	//navigate and draw
+    }
+    
     void drawMouseInfo(boolean mouseEnabled) {
-    	this.RoutePanel.setMouseEnabled(mouseEnabled);
+    	this.routePanel.setMouseEnabled(mouseEnabled);
     	this.drawRouting(this.currentRouting);
     }
     
     void drawPlot(boolean plotEnabled) {
-    	this.RoutePanel.setPlotEnabled(plotEnabled); //plotEnabled, this.bbCost);
+    	this.routePanel.setPlotEnabled(plotEnabled); //plotEnabled, this.bbCost);
     	this.drawRouting(this.currentRouting);
     }
     

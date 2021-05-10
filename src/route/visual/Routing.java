@@ -3,21 +3,27 @@ package route.visual;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Set;
+import java.util.List;
 
 import route.circuit.Circuit;
 import route.circuit.block.GlobalBlock;
+import route.circuit.resource.RouteNode;
 
 class Routing {
 	
 	private String name; //really needed?
 	private int iteration;
 	private Circuit circuit;
-	private int numBlocks;
+	private int numWires;
 	
 	Routing(int iteration, Circuit circuit) {
 		this.initialiseData(iteration, circuit);
 		
 		//do some stuff
+	}
+	
+	Routing(int iteration, Circuit circuit, List<RouteNode> routeNodeList) {
+		this.initialiseData(iteration, circuit);
 	}
 	
 	//some other constructors
