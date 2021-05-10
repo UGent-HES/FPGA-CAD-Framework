@@ -58,8 +58,8 @@ public class ConnectionRouter {
 
 	// Bounding Box adjustments
 	// CongestionLookAheadMethod - Different modes of congestion lookahead - NONE is obtained by CONG_LA_W/BB both to false
-	public static enum CongLAMethod {GROW_WHEN_CONGESTED, CLOSE_TO_BORDER_GROW, CLOSE_TO_BORDER_DELTA, GRID_DETECTION, HOTSPOT_DETECTION, HOTSPOT_OR_GROW, HOTSPOT_AND_CLOSE};
 	public static final CongLAMethod CONG_LA_METHOD = CongLAMethod.HOTSPOT_DETECTION; // CONGESTION_LOOK_AHEAD_METHOD
+	public static enum CongLAMethod {GROW_WHEN_CONGESTED, CLOSE_TO_BORDER_GROW, CLOSE_TO_BORDER_DELTA, GRID_DETECTION, HOTSPOT_DETECTION, HOTSPOT_OR_GROW, HOTSPOT_AND_CLOSE_GROW, HOTSPOT_AND_CLOSE_DELTA};
 	
 	// if (GROW_WHEN_CONGESTED) OR if(CLOSE_TO_BORDER_GROW):
 	private final short BB_GROWTH = 2;
@@ -96,11 +96,18 @@ public class ConnectionRouter {
 		
 		this.routeTimers = new RouteTimers();
 		
-		if (CONG_LA_METHOD == CongLAMethod.GRID_DETECTION) {
-		    this.zoneManager = new GridZoneManager(6,4);
-		}
-		else if (CONG_LA_METHOD == CongLAMethod.HOTSPOT_DETECTION) {
-		    this.zoneManager = new HotspotZoneManager();
+		switch(CONG_LA_METHOD) {
+		case GRID_DETECTION:
+			this.zoneManager = new GridZoneManager(6,4);
+			break;
+		case HOTSPOT_DETECTION:
+		case HOTSPOT_OR_GROW:
+		case HOTSPOT_AND_CLOSE_GROW:
+		case HOTSPOT_AND_CLOSE_DELTA:
+			this.zoneManager = new HotspotZoneManager();
+			break;
+		default:
+			break;
 		}
 	}
 	
@@ -352,6 +359,9 @@ public class ConnectionRouter {
 				// this is meant for techniques working on the whole rrg.
 				switch (CONG_LA_METHOD) {
 				case HOTSPOT_DETECTION:
+				case HOTSPOT_OR_GROW:
+				case HOTSPOT_AND_CLOSE_GROW:
+				case HOTSPOT_AND_CLOSE_DELTA:
 					clusters = (HotspotZoneManager) zoneManager;
 					// We want a structure with least time complexity for: remove(), last() (OR first(), depends on comparator) and initialization
 					// We have 2 approaches:
@@ -425,7 +435,17 @@ public class ConnectionRouter {
 							connectionBoxesUpdated++;
 						}
 						break;
-					case HOTSPOT_AND_CLOSE:
+					case HOTSPOT_AND_CLOSE_GROW:
+						if (con.congestedZoneUpdateBoundingBox(clusters, ROUTE_AROUND, MAX_EXPANSION))
+							connectionBoxesUpdated++;
+						if (con.dynamicUpdateBoundingBox(DYNAMIC_BB_DELTA_THRESHOLD, BB_GROWTH))
+							connectionBoxesUpdated++;
+						break;
+					case HOTSPOT_AND_CLOSE_DELTA:
+						if (con.congestedZoneUpdateBoundingBox(clusters, ROUTE_AROUND, MAX_EXPANSION))
+							connectionBoxesUpdated++;
+						if (con.dynamicUpdateBoundingBox(ROUTE_AROUND))
+							connectionBoxesUpdated++;
 						break;
 					case GRID_DETECTION:
 						break;
