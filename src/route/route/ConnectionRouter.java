@@ -363,6 +363,7 @@ public class ConnectionRouter {
 				case HOTSPOT_AND_CLOSE_GROW:
 				case HOTSPOT_AND_CLOSE_DELTA:
 					clusters = (HotspotZoneManager) zoneManager;
+					clusters.clear();
 					// We want a structure with least time complexity for: remove(), last() (OR first(), depends on comparator) and initialization
 					// We have 2 approaches:
 					SortedSet<RouteNode> congestedRouteNodes = new TreeSet<RouteNode>(Comparators.CONGESTION_COMPARATOR);
