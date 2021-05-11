@@ -45,8 +45,8 @@ public class RouteTimers {
 		result += this.calculateStatistics;
 		result += this.updateTiming;
 		result += this.updateCost;
-		result += this.congestionLookahead;
 		result += this.congestionDetection;
+		result += this.congestionLookahead;
 		result += this.congestionCost;
 		
 		return result;
