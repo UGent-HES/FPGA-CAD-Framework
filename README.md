@@ -67,9 +67,10 @@ Dries Vercruyce, Elias Vansteenkiste and Dirk Stroobandt</b> <br>
 <i> Field Programmable Technology (ICFPT), 2017 17th International Conference on. IEEE, 2017</i>
 
 Routing:
-<b>CRoute: A fast high-quality timing-driven connection-based FPGA router<br>
+<b>CRoute: A Fast High-Quality Timing-Driven Connection-Based FPGA Router<br>
 Dries Vercruyce, Elias Vansteenkiste and Dirk Stroobandt</b> <br>
-<i> accepted for publication</i>
+<i>2019 IEEE 27th Annual International Symposium on Field-Programmable Custom Computing Machines (FCCM), San Diego, CA, USA, 2019</i>
+
 
 Contributors
 ---------------
