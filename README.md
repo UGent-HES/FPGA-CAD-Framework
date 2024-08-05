@@ -74,13 +74,9 @@ Dries Vercruyce, Elias Vansteenkiste and Dirk Stroobandt</b> <br>
 
 Contributors
 ---------------
-Active Contributors
+
 <ul>
   <li>Yun Zhou - <a href="mailto:yun.zhou@ugent.be">yun.zhou@ugent.be</a></li>
-</ul>
-
-Past Contributors
-<ul>
   <li>Dries Vercruyce - <a href="mailto:dries.vercruyce@ugent.be">dries.vercruyce@ugent.be</a></li>
   <li>Elias Vansteenkiste - <a href="mailto:Elias.Vansteenkiste@gmail.com">Elias.Vansteenkiste@gmail.com</a></li>
   <li>Arno Messiaen - <a href="mailto:Arno.Messiaen@gmail.com">Arno.Messiaen@gmail.com</a></li>
